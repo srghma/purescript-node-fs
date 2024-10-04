@@ -24,6 +24,13 @@ module Node.FS.Aff
   , mkdir
   , mkdir'
   , readdir
+  , readdir'
+  , readdirBuffer
+  , readdirBuffer'
+  , readdirDirent
+  , readdirDirent'
+  , readdirDirentBuffer
+  , readdirDirentBuffer'
   , utimes
   , readFile
   , readTextFile
@@ -37,6 +44,32 @@ module Node.FS.Aff
   , fdWrite
   , fdAppend
   , fdClose
+  , cp
+  , cp'
+  , fchmod
+  , fchown
+  , fdatasync
+  , fstat
+  , fsync
+  , ftruncate
+  , futimes
+  , glob
+  , glob'
+  , globDirent
+  , globDirent'
+  , lchmod
+  , lchown
+  , lutimes
+  -- , openAsBlob
+  , opendir
+  , opendir'
+  , readv
+  , statfs
+  -- , unwatchFile
+  -- , watch
+  -- , watchFile
+  , writev
+  , module Exports
   ) where
 
 import Prelude
@@ -44,13 +77,18 @@ import Prelude
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe)
+import Data.Tuple (Tuple)
 import Effect (Effect)
 import Effect.Aff (Aff, Error, makeAff, nonCanceler)
 import Node.Buffer (Buffer)
 import Node.Encoding (Encoding)
 import Node.FS as F
+import Node.FS.Async (CpOptions)
+import Node.FS.Async (CpOptions, CpForce(..), cpOptionsDefault) as Exports
 import Node.FS.Async as A
 import Node.FS.Constants (AccessMode, CopyMode)
+import Node.FS.Dir (Dir)
+import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
 import Node.FS.Perms (Perms)
 import Node.FS.Stats (Stats)
 import Node.Path (FilePath)
@@ -85,6 +123,16 @@ toAff3
   -> Aff a
 toAff3 f a b c = toAff (f a b c)
 
+-- toAff4
+--   :: forall a x y z
+--    . (x -> y -> z -> y -> A.Callback a -> Effect Unit)
+--   -> x
+--   -> y
+--   -> z
+--   -> y
+--   -> Aff a
+-- toAff4 f a b c d = toAff (f a b c d)
+
 toAff5
   :: forall a w v x y z
    . (w -> v -> x -> y -> z -> A.Callback a -> Effect Unit)
@@ -95,6 +143,18 @@ toAff5
   -> z
   -> Aff a
 toAff5 f a b c d e = toAff (f a b c d e)
+
+-- toAff6
+--   :: forall a w v x y z t
+--    . (w -> v -> x -> y -> z -> t -> A.Callback a -> Effect Unit)
+--   -> w
+--   -> v
+--   -> x
+--   -> y
+--   -> z
+--   -> t
+--   -> Aff a
+-- toAff6 f a b c d e t = toAff (f a b c d e t)
 
 access :: String -> Aff (Maybe Error)
 access path = makeAff \k -> do
@@ -237,6 +297,39 @@ mkdir' = toAff2 A.mkdir'
 readdir :: FilePath -> Aff (Array FilePath)
 readdir = toAff1 A.readdir
 
+-- | Reads the contents of a directory with options.
+readdir' :: FilePath -> { recursive :: Boolean, encoding :: Encoding } -> Aff (Array FilePath)
+readdir' = toAff2 A.readdir'
+
+-- | Reads the contents of a directory and returns an Aff (Array Buffer).
+readdirBuffer :: FilePath -> Aff (Array Buffer)
+readdirBuffer = toAff1 A.readdirBuffer
+
+-- | Reads the contents of a directory with options and returns Aff (Array Buffer).
+readdirBuffer' :: FilePath -> { recursive :: Boolean } -> Aff (Array Buffer)
+readdirBuffer' = toAff2 A.readdirBuffer'
+
+-- | Reads the contents of a directory and returns an Aff (Array (Dirent DirentNameTypeString)).
+readdirDirent :: FilePath -> Aff (Array (Dirent DirentNameTypeString))
+readdirDirent = toAff1 A.readdirDirent
+
+-- | Reads the contents of a directory with options and returns Aff (Array (Dirent DirentNameTypeString)).
+readdirDirent' :: FilePath -> { recursive :: Boolean, encoding :: Encoding } -> Aff (Array (Dirent DirentNameTypeString))
+readdirDirent' = toAff2 A.readdirDirent'
+
+-- | Reads the contents of a directory.
+readdirDirentBuffer
+  :: FilePath
+  -> Aff (Array (Dirent DirentNameTypeBuffer))
+readdirDirentBuffer = toAff1 A.readdirDirentBuffer
+
+-- | Reads the contents of a directory.
+readdirDirentBuffer'
+  :: FilePath
+  -> { recursive :: Boolean }
+  -> Aff (Array (Dirent DirentNameTypeBuffer))
+readdirDirentBuffer' = toAff2 A.readdirDirentBuffer'
+
 -- |
 -- | Sets the accessed and modified times for the specified file.
 -- |
@@ -324,3 +417,122 @@ fdAppend = toAff2 A.fdAppend
 -- | for details.
 fdClose :: F.FileDescriptor -> Aff Unit
 fdClose = toAff1 A.fdClose
+
+-- | Copy a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fspromises_copyfile_src_dest_mode)
+-- | for details.
+cp :: FilePath -> FilePath -> Aff Unit
+cp = toAff2 A.cp
+
+cp' :: FilePath -> FilePath -> CpOptions -> Aff Unit
+cp' = toAff3 A.cp'
+
+-- | Change permissions on a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fchmod_fd_mode_callback)
+-- | for details.
+fchmod :: F.FileDescriptor -> Perms -> Aff Unit
+fchmod = toAff2 A.fchmod
+
+-- | Change ownership of a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fchown_fd_uid_gid_callback)
+-- | for details.
+fchown :: F.FileDescriptor -> Int -> Int -> Aff Unit
+fchown = toAff3 A.fchown
+
+-- | Synchronize a file's in-core state with storage. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fdatasync_fd_callback)
+-- | for details.
+fdatasync :: F.FileDescriptor -> Aff Unit
+fdatasync = toAff1 A.fdatasync
+
+-- | Get file status information. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fstat_fd_callback)
+-- | for details.
+fstat :: F.FileDescriptor -> Aff Stats
+fstat = toAff1 A.fstat
+
+-- | Flushes a file descriptor to disk. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fsync_fd_callback)
+-- | for details.
+fsync :: F.FileDescriptor -> Aff Unit
+fsync = toAff1 A.fsync
+
+-- | Truncate a file to a specified length. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_ftruncate_fd_len_callback)
+-- | for details.
+ftruncate :: F.FileDescriptor -> Int -> Aff Unit
+ftruncate = toAff2 A.ftruncate
+
+-- | Change file timestamps for a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_futimes_fd_atime_mtime_callback)
+-- | for details.
+futimes :: FilePath -> DateTime -> DateTime -> Aff Unit
+futimes = toAff3 A.futimes
+
+-- | Perform pattern matching in file paths. See the [Node Documentation](https://nodejs.org/api/glob.html#globglob_pattern_options_callback)
+-- | for details.
+glob :: Array FilePath -> Aff (Array FilePath)
+glob = toAff1 A.glob
+
+glob' :: Array FilePath -> { cwd :: Maybe FilePath, exclude :: Maybe (FilePath -> Boolean) } -> Aff (Array FilePath)
+glob' = toAff2 A.glob'
+
+globDirent :: Array FilePath -> Aff (Array (Dirent DirentNameTypeString))
+globDirent = toAff1 A.globDirent
+
+globDirent' :: Array FilePath -> { cwd :: Maybe FilePath, exclude :: Maybe (Dirent DirentNameTypeString -> Boolean) } -> Aff (Array (Dirent DirentNameTypeString))
+globDirent' = toAff2 A.globDirent'
+
+-- | Change permissions on a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lchmod_path_mode_callback)
+-- | for details.
+lchmod :: FilePath -> Perms -> Aff Unit
+lchmod = toAff2 A.lchmod
+
+-- | Change ownership of a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lchown_path_uid_gid_callback)
+-- | for details.
+lchown :: FilePath -> Int -> Int -> Aff Unit
+lchown = toAff3 A.lchown
+
+-- | Change timestamps for a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lutimes_path_atime_mtime_callback)
+-- | for details.
+lutimes :: FilePath -> DateTime -> DateTime -> Aff Unit
+lutimes = toAff3 A.lutimes
+
+-- | Open a file as a blob. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_class_filehandle)
+-- | for details.
+-- openAsBlob :: FilePath -> Aff Blob
+-- openAsBlob = toAff1 A.openAsBlob
+
+-- | Open a directory. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_opendir_path_options_callback)
+-- | for details.
+opendir :: FilePath -> Aff Dir
+opendir = toAff1 A.opendir
+
+-- | Open a directory. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_opendir_path_options_callback)
+-- | for details.
+opendir' :: FilePath -> { bufferSize :: Int, recursive :: Boolean, encoding :: Encoding } -> Aff Dir
+opendir' = toAff2 A.opendir'
+
+-- | Read from a file descriptor into a buffer array. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_readv_fd_buffers_position_callback)
+-- | for details.
+readv :: F.FileDescriptor -> Array Buffer -> Maybe F.FilePosition -> Aff (Tuple F.ByteCount (Array Buffer))
+readv = toAff3 A.readv
+
+-- | TODO: bigint, path Buffer Url
+-- | Get file system statistics. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_statfs_path_callback)
+-- | for details.
+statfs :: FilePath -> Aff Stats
+statfs = toAff1 A.statfs
+
+-- | TODO: implement
+-- | Stop watching a file for changes. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_unwatchfile_filename_listener)
+-- | for details.
+-- unwatchFile :: FilePath -> Effect Unit
+-- unwatchFile = toAff1 A.unwatchFile
+
+-- | Watch for changes in a file or directory. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_watch_filename_options_listener)
+-- | for details.
+-- watch :: FilePath -> (String -> Effect Unit) -> Effect Unit
+-- watch = toAff2 A.watch
+
+-- | Watch for changes in a file and trigger a callback. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_watchfile_filename_options_listener)
+-- | for details.
+-- watchFile :: FilePath -> (Stats -> Stats -> Effect Unit) -> Effect Unit
+-- watchFile = toAff2 A.watchFile
+
+-- | Write from an array of buffers to a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_writev_fd_buffers_position_callback)
+-- | for details.
+writev :: F.FileDescriptor -> Array Buffer -> Maybe F.FilePosition -> Aff (Tuple F.ByteCount (Array Buffer))
+writev = toAff3 A.writev

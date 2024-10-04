@@ -150,12 +150,12 @@ main = do
   let fdFile = fp [ "tmp", "FD.json" ]
   fd0 <- S.fdOpen fdFile W (Just 420)
   buf0 <- Buffer.fromString "[ 42 ]" UTF8
-  bytes0 <- S.fdAppend fd0 buf0
+  _bytes0 <- S.fdAppend fd0 buf0
   S.fdFlush fd0
   S.fdClose fd0
   fd1 <- S.fdOpen fdFile R Nothing
   buf1 <- Buffer.create =<< Buffer.size buf0
-  bytes1 <- S.fdNext fd1 buf1
+  _bytes2 <- S.fdNext fd1 buf1
   S.fdClose fd1
 
   log "statSync on a non-existing file should be catchable"
@@ -182,7 +182,7 @@ main = do
     Nothing -> throw $ "`access \"" <> readableFixturePath <> "\" W_OK` should produce error"
 
   log "copy tests"
-  let outerTmpDir = "./test/node-fs-tests"
+  let outerTmpDir = "./tmp/test/node-fs-tests"
   S.mkdir' outerTmpDir { recursive: true, mode: permsAll }
   tempDir <- S.mkdtemp outerTmpDir
   S.mkdir' tempDir { recursive: true, mode: permsAll }

@@ -1,0 +1,167 @@
+package:
+  name: node-fs
+  publish:
+    license: MIT
+    version: 9.2.0
+    location:
+      githubOwner: purescript-node
+      githubRepo: purescript-node-fs
+  dependencies:
+    - datetime
+    - effect
+    - either
+    - enums
+    - exceptions
+    - functions
+    - integers
+    - js-date
+    - maybe
+    - node-buffer
+    - node-path
+    - node-streams
+    - nullable
+    - partial
+    - prelude
+    - strings
+    - unsafe-coerce
+    - node-buffer-blob
+    - refs
+  test:
+    main: Test.Main
+    dependencies:
+      - console
+      - aff
+      - arrays
+      - assert
+workspace:
+  packageSet:
+    registry: 60.2.1
+  extraPackages:
+    bench:
+      path: /home/srghma/projects/purescript-language-cst-parser/bench
+    bin:
+      path: /home/srghma/projects/purescript-overlay/generate/bin
+    bolson:
+      path: /home/srghma/projects/purescript-bolson
+    codegen:
+      path: /home/srghma/projects/purescript-deku/codegen
+    deku:
+      path: /home/srghma/projects/purescript-deku/deku
+    deku-core:
+      path: /home/srghma/projects/purescript-deku/deku-core
+    deku-css:
+      path: /home/srghma/projects/purescript-deku/deku-css
+    deku-documentation:
+      path: /home/srghma/projects/deku-documentation
+    deku-dom:
+      path: /home/srghma/projects/purescript-deku/deku-dom
+    deku-nextui:
+      path: /home/srghma/projects/purescript-deku-nextui
+    dodo-printer:
+      path: /home/srghma/projects/purescript-dodo-printer
+    express:
+      path: /home/srghma/projects/purescript-express
+    faker:
+      path: /home/srghma/projects/purescript-faker
+    foreign-generic:
+      path: /home/srghma/projects/purescript-foreign-generic
+    foreign-js-map:
+      path: /home/srghma/projects/purescript-foreign-js-map
+    github-actions-toolkit:
+      path: /home/srghma/projects/purescript-github-actions-toolkit
+    homogeneous-records:
+      path: /home/srghma/projects/purescript-homogeneous-records
+    html2deku:
+      path: /home/srghma/projects/html2deku
+    hyper:
+      path: /home/srghma/projects/hyper
+    hyrule:
+      path: /home/srghma/projects/purescript-hyrule
+    hyrule-demo:
+      path: /home/srghma/projects/purescript-hyrule-demo
+    jsdom:
+      path: /home/srghma/projects/purescript-jsdom
+    language-cst-parser:
+      path: /home/srghma/projects/purescript-language-cst-parser/lib
+    lib:
+      path: /home/srghma/projects/purescript-overlay/generate/lib
+    lumi-components:
+      path: /home/srghma/projects/purescript-lumi-components
+    lunapark:
+      path: /home/srghma/projects/purescript-lunapark
+    myapp-api-server:
+      path: /home/srghma/projects/nativescript-testapp/packages/api-server
+    myapp-common:
+      path: /home/srghma/projects/nativescript-testapp/packages/common
+    node-buffer-blob:
+      path: /home/srghma/projects/purescript-node-buffer-blob
+    node-workerbees:
+      path: /home/srghma/projects/purescript-node-workerbees
+    nodemailer:
+      path: /home/srghma/projects/purescript-nodemailer
+    open-drawing:
+      path: /home/srghma/projects/purescript-open-drawing/lib
+    open-drawing-example:
+      path: /home/srghma/projects/purescript-open-drawing/example
+    open-express-passport:
+      path: /home/srghma/projects/purescript-open-express-passport
+    open-folds:
+      path: /home/srghma/projects/purescript-open-folds
+    open-foreign-generic:
+      path: /home/srghma/projects/purescript-open-foreign-generic
+    open-memoize:
+      path: /home/srghma/projects/purescript-open-memoize
+    open-mkdirp-aff:
+      path: /home/srghma/projects/purescript-open-mkdirp-aff
+    open-pairing:
+      path: /home/srghma/projects/purescript-open-pairing_
+    open-smolder:
+      path: /home/srghma/projects/purescript-open-smolder
+    parse-package-set:
+      path: /home/srghma/projects/purescript-language-cst-parser/parse-package-set
+    parsing:
+      path: /home/srghma/projects/purescript-parsing
+    pathy-node-fs:
+      path: /home/srghma/projects/purescript-pathy-node-fs
+    postgresql-client:
+      path: /home/srghma/projects/purescript-postgresql-client
+    profunctor:
+      path: /home/srghma/projects/purescript-profunctor
+    protolude:
+      path: /home/srghma/projects/purescript-protolude
+    record-extra-srghma:
+      path: /home/srghma/projects/purescript-record-extra-srghma
+    routing-duplex-variant:
+      path: /home/srghma/projects/purescript-routing-duplex-variant
+    simple:
+      path: /home/srghma/projects/purescript-overlay/nix/examples/simple
+    simple-codegen:
+      path: /home/srghma/projects/purescript-overlay/nix/examples/simple-codegen
+    simple-ffi:
+      path: /home/srghma/projects/purescript-overlay/nix/examples/simple-ffi
+    spago:
+      path: /home/srghma/projects/spago
+    spago-bin:
+      path: /home/srghma/projects/spago/bin
+    spago-core:
+      path: /home/srghma/projects/spago/core
+    spec-discovery:
+      path: /home/srghma/projects/purescript-spec-discovery
+    tidy:
+      path: /home/srghma/projects/purescript-tidy/lib
+    tidy-cli:
+      path: /home/srghma/projects/purescript-tidy/bin
+    tidy-codegen:
+      path: /home/srghma/projects/purescript-tidy-codegen
+    tidy-script:
+      path: /home/srghma/projects/purescript-tidy/script
+    tldr:
+      path: /home/srghma/projects/purescript-tldr
+    web-intersection-observer:
+      path: /home/srghma/projects/purescript-web-intersection-observer
+    webpack-loader-api:
+      path: /home/srghma/projects/purescript-webpack-loader-api
+    websocket-simple:
+      path: /home/srghma/projects/purescript-websocket-simple
+    yarn:
+      path: /home/srghma/projects/purescript-yarn

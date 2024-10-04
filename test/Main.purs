@@ -7,6 +7,7 @@ import Test as Test
 import Test.Streams as Streams
 import TestAff as TestAff
 import TestAsync as TestAsync
+import TestDirEntries as TestDirEntries
 
 main :: Effect Unit
 main = do
@@ -14,3 +15,4 @@ main = do
   TestAsync.main
   Streams.main
   TestAff.main
+  TestDirEntries.main
