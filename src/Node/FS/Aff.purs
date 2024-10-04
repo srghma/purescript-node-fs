@@ -156,26 +156,26 @@ toAff5 f a b c d e = toAff (f a b c d e)
 --   -> Aff a
 -- toAff6 f a b c d e t = toAff (f a b c d e t)
 
-access :: String -> Aff (Maybe Error)
+access :: FilePath -> Aff (Maybe Error)
 access path = makeAff \k -> do
   A.access path (k <<< Right)
   pure nonCanceler
 
-access' :: String -> AccessMode -> Aff (Maybe Error)
+access' :: FilePath -> AccessMode -> Aff (Maybe Error)
 access' path mode = makeAff \k -> do
   A.access' path mode (k <<< Right)
   pure nonCanceler
 
-copyFile :: String -> String -> Aff Unit
+copyFile :: FilePath -> FilePath -> Aff Unit
 copyFile = toAff2 A.copyFile
 
-copyFile' :: String -> String -> CopyMode -> Aff Unit
+copyFile' :: FilePath -> FilePath -> CopyMode -> Aff Unit
 copyFile' = toAff3 A.copyFile'
 
-mkdtemp :: String -> Aff String
+mkdtemp :: FilePath -> Aff FilePath
 mkdtemp = toAff1 A.mkdtemp
 
-mkdtemp' :: String -> Encoding -> Aff String
+mkdtemp' :: FilePath -> Encoding -> Aff FilePath
 mkdtemp' = toAff2 A.mkdtemp'
 
 -- |

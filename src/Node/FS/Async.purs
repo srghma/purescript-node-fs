@@ -139,13 +139,13 @@ copyFile' src dest mode cb = runEffectFn4 copyFileImpl src dest mode (handleCall
 
 foreign import copyFileImpl :: EffectFn4 FilePath FilePath CopyMode (JSCallback Unit) Unit
 
-mkdtemp :: String -> Callback String -> Effect Unit
+mkdtemp :: FilePath -> Callback FilePath -> Effect Unit
 mkdtemp prefix = mkdtemp' prefix UTF8
 
-mkdtemp' :: String -> Encoding -> Callback String -> Effect Unit
+mkdtemp' :: FilePath -> Encoding -> Callback FilePath -> Effect Unit
 mkdtemp' prefix encoding cb = runEffectFn3 mkdtempImpl prefix (encodingToNode encoding) (handleCallback cb)
 
-foreign import mkdtempImpl :: EffectFn3 FilePath String (JSCallback String) Unit
+foreign import mkdtempImpl :: EffectFn3 FilePath FilePath (JSCallback FilePath) Unit
 
 foreign import renameImpl :: EffectFn3 FilePath FilePath (JSCallback Unit) Unit
 foreign import truncateImpl :: EffectFn3 FilePath Int (JSCallback Unit) Unit
@@ -154,7 +154,7 @@ foreign import chmodImpl :: EffectFn3 FilePath String (JSCallback Unit) Unit
 foreign import statImpl :: EffectFn2 FilePath (JSCallback Stats) Unit
 foreign import lstatImpl :: EffectFn2 FilePath (JSCallback Stats) Unit
 foreign import linkImpl :: EffectFn3 FilePath FilePath (JSCallback Unit) Unit
-foreign import symlinkImpl :: EffectFn4 FilePath FilePath String (JSCallback Unit) Unit
+foreign import symlinkImpl :: EffectFn4 FilePath FilePath (Nullable String) (JSCallback Unit) Unit
 foreign import readlinkImpl :: EffectFn2 FilePath (JSCallback FilePath) Unit
 foreign import realpathImpl :: forall cache. EffectFn3 FilePath { | cache } (JSCallback FilePath) Unit
 foreign import unlinkImpl :: EffectFn2 FilePath (JSCallback Unit) Unit
@@ -180,7 +180,7 @@ foreign import fstatImpl :: EffectFn2 FileDescriptor (JSCallback Stats) Unit
 foreign import fsyncImpl :: EffectFn2 FileDescriptor (JSCallback Unit) Unit
 foreign import ftruncateImpl :: EffectFn3 FileDescriptor Int (JSCallback Unit) Unit
 foreign import futimesImpl :: EffectFn4 FileDescriptor Int Int (JSCallback Unit) Unit
-foreign import globImpl :: forall filepathOrDirent. EffectFn3 (Array String) { cwd :: Nullable FilePath, exclude :: Nullable (filepathOrDirent -> Boolean), withFileTypes :: Boolean } (JSCallback (Array filepathOrDirent)) Unit
+foreign import globImpl :: forall filepathOrDirent. EffectFn3 (Array FilePath) { cwd :: Nullable FilePath, exclude :: Nullable (filepathOrDirent -> Boolean), withFileTypes :: Boolean } (JSCallback (Array filepathOrDirent)) Unit
 foreign import lchmodImpl :: EffectFn3 FilePath String (JSCallback Unit) Unit
 foreign import lchownImpl :: EffectFn4 FilePath Int Int (JSCallback Unit) Unit
 foreign import lutimesImpl :: EffectFn4 FilePath Int Int (JSCallback Unit) Unit

@@ -93,7 +93,7 @@ foreign import chmodSyncImpl :: EffectFn2 FilePath String Unit
 foreign import statSyncImpl :: EffectFn1 FilePath Stats
 foreign import lstatSyncImpl :: EffectFn1 FilePath Stats
 foreign import linkSyncImpl :: EffectFn2 FilePath FilePath Unit
-foreign import symlinkSyncImpl :: EffectFn3 FilePath FilePath String Unit
+foreign import symlinkSyncImpl :: EffectFn3 FilePath FilePath (Nullable String) Unit
 foreign import readlinkSyncImpl :: EffectFn1 FilePath FilePath
 foreign import realpathSyncImpl :: forall cache. EffectFn2 FilePath { | cache } FilePath
 foreign import unlinkSyncImpl :: EffectFn1 FilePath Unit
