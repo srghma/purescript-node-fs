@@ -14,7 +14,6 @@ workspace:
           - js-date
           - maybe
           - node-buffer
-          - node-buffer-blob
           - node-path
           - node-streams
           - nullable
@@ -25,7 +24,6 @@ workspace:
           - unsafe-coerce
         build_plan:
           - aff
-          - aff-promise
           - arraybuffer-types
           - arrays
           - bifunctors
@@ -48,14 +46,11 @@ workspace:
           - integers
           - invariant
           - js-date
-          - js-promise
           - lazy
           - lists
           - maybe
-          - media-types
           - newtype
           - node-buffer
-          - node-buffer-blob
           - node-event-emitter
           - node-path
           - node-streams
@@ -79,7 +74,6 @@ workspace:
           - type-equality
           - unfoldable
           - unsafe-coerce
-          - web-streams
       test:
         dependencies:
           - aff
@@ -639,135 +633,7 @@ workspace:
       yoga-tree: 1.0.0
       z3: 0.0.2
       zipperarray: 2.0.0
-  extra_packages:
-    bench:
-      path: /home/srghma/projects/purescript-language-cst-parser/bench
-    bin:
-      path: /home/srghma/projects/purescript-overlay/generate/bin
-    bolson:
-      path: /home/srghma/projects/purescript-bolson
-    codegen:
-      path: /home/srghma/projects/purescript-deku/codegen
-    deku:
-      path: /home/srghma/projects/purescript-deku/deku
-    deku-core:
-      path: /home/srghma/projects/purescript-deku/deku-core
-    deku-css:
-      path: /home/srghma/projects/purescript-deku/deku-css
-    deku-documentation:
-      path: /home/srghma/projects/deku-documentation
-    deku-dom:
-      path: /home/srghma/projects/purescript-deku/deku-dom
-    deku-nextui:
-      path: /home/srghma/projects/purescript-deku-nextui
-    dodo-printer:
-      path: /home/srghma/projects/purescript-dodo-printer
-    express:
-      path: /home/srghma/projects/purescript-express
-    faker:
-      path: /home/srghma/projects/purescript-faker
-    foreign-generic:
-      path: /home/srghma/projects/purescript-foreign-generic
-    foreign-js-map:
-      path: /home/srghma/projects/purescript-foreign-js-map
-    github-actions-toolkit:
-      path: /home/srghma/projects/purescript-github-actions-toolkit
-    homogeneous-records:
-      path: /home/srghma/projects/purescript-homogeneous-records
-    html2deku:
-      path: /home/srghma/projects/html2deku
-    hyper:
-      path: /home/srghma/projects/hyper
-    hyrule:
-      path: /home/srghma/projects/purescript-hyrule
-    hyrule-demo:
-      path: /home/srghma/projects/purescript-hyrule-demo
-    jsdom:
-      path: /home/srghma/projects/purescript-jsdom
-    language-cst-parser:
-      path: /home/srghma/projects/purescript-language-cst-parser/lib
-    lib:
-      path: /home/srghma/projects/purescript-overlay/generate/lib
-    lumi-components:
-      path: /home/srghma/projects/purescript-lumi-components
-    lunapark:
-      path: /home/srghma/projects/purescript-lunapark
-    myapp-api-server:
-      path: /home/srghma/projects/nativescript-testapp/packages/api-server
-    myapp-common:
-      path: /home/srghma/projects/nativescript-testapp/packages/common
-    node-buffer-blob:
-      path: /home/srghma/projects/purescript-node-buffer-blob
-    node-workerbees:
-      path: /home/srghma/projects/purescript-node-workerbees
-    nodemailer:
-      path: /home/srghma/projects/purescript-nodemailer
-    open-drawing:
-      path: /home/srghma/projects/purescript-open-drawing/lib
-    open-drawing-example:
-      path: /home/srghma/projects/purescript-open-drawing/example
-    open-express-passport:
-      path: /home/srghma/projects/purescript-open-express-passport
-    open-folds:
-      path: /home/srghma/projects/purescript-open-folds
-    open-foreign-generic:
-      path: /home/srghma/projects/purescript-open-foreign-generic
-    open-memoize:
-      path: /home/srghma/projects/purescript-open-memoize
-    open-mkdirp-aff:
-      path: /home/srghma/projects/purescript-open-mkdirp-aff
-    open-pairing:
-      path: /home/srghma/projects/purescript-open-pairing_
-    open-smolder:
-      path: /home/srghma/projects/purescript-open-smolder
-    parse-package-set:
-      path: /home/srghma/projects/purescript-language-cst-parser/parse-package-set
-    parsing:
-      path: /home/srghma/projects/purescript-parsing
-    pathy-node-fs:
-      path: /home/srghma/projects/purescript-pathy-node-fs
-    postgresql-client:
-      path: /home/srghma/projects/purescript-postgresql-client
-    profunctor:
-      path: /home/srghma/projects/purescript-profunctor
-    protolude:
-      path: /home/srghma/projects/purescript-protolude
-    record-extra-srghma:
-      path: /home/srghma/projects/purescript-record-extra-srghma
-    routing-duplex-variant:
-      path: /home/srghma/projects/purescript-routing-duplex-variant
-    simple:
-      path: /home/srghma/projects/purescript-overlay/nix/examples/simple
-    simple-codegen:
-      path: /home/srghma/projects/purescript-overlay/nix/examples/simple-codegen
-    simple-ffi:
-      path: /home/srghma/projects/purescript-overlay/nix/examples/simple-ffi
-    spago:
-      path: /home/srghma/projects/spago
-    spago-bin:
-      path: /home/srghma/projects/spago/bin
-    spago-core:
-      path: /home/srghma/projects/spago/core
-    spec-discovery:
-      path: /home/srghma/projects/purescript-spec-discovery
-    tidy:
-      path: /home/srghma/projects/purescript-tidy/lib
-    tidy-cli:
-      path: /home/srghma/projects/purescript-tidy/bin
-    tidy-codegen:
-      path: /home/srghma/projects/purescript-tidy-codegen
-    tidy-script:
-      path: /home/srghma/projects/purescript-tidy/script
-    tldr:
-      path: /home/srghma/projects/purescript-tldr
-    web-intersection-observer:
-      path: /home/srghma/projects/purescript-web-intersection-observer
-    webpack-loader-api:
-      path: /home/srghma/projects/purescript-webpack-loader-api
-    websocket-simple:
-      path: /home/srghma/projects/purescript-websocket-simple
-    yarn:
-      path: /home/srghma/projects/purescript-yarn
+  extra_packages: {}
 packages:
   aff:
     type: registry
@@ -790,13 +656,6 @@ packages:
       - tailrec
       - transformers
       - unsafe-coerce
-  aff-promise:
-    type: registry
-    version: 4.0.0
-    integrity: sha256-Kq5EupbUpXeUXx4JqGQE7/RTTz/H6idzWhsocwlEFhM=
-    dependencies:
-      - aff
-      - foreign
   arraybuffer-types:
     type: registry
     version: 3.0.2
@@ -1051,17 +910,6 @@ packages:
       - foreign
       - integers
       - now
-  js-promise:
-    type: registry
-    version: 1.0.0
-    integrity: sha256-kXNo5g9RJgPdrTuKRe5oG2kBIwPp+j5VDPDplqZBJzQ=
-    dependencies:
-      - effect
-      - exceptions
-      - foldable-traversable
-      - functions
-      - maybe
-      - prelude
   lazy:
     type: registry
     version: 6.0.0
@@ -1097,13 +945,6 @@ packages:
       - invariant
       - newtype
       - prelude
-  media-types:
-    type: registry
-    version: 6.0.0
-    integrity: sha256-n/4FoGBasbVSYscGVRSyBunQ6CZbL3jsYL+Lp01mc9k=
-    dependencies:
-      - newtype
-      - prelude
   newtype:
     type: registry
     version: 5.0.0
@@ -1122,21 +963,6 @@ packages:
       - nullable
       - st
       - unsafe-coerce
-  node-buffer-blob:
-    type: local
-    path: /home/srghma/projects/purescript-node-buffer-blob
-    dependencies:
-      - aff-promise
-      - arraybuffer-types
-      - arrays
-      - effect
-      - maybe
-      - media-types
-      - newtype
-      - node-buffer
-      - nullable
-      - prelude
-      - web-streams
   node-event-emitter:
     type: registry
     version: 3.0.0
@@ -1251,8 +1077,9 @@ packages:
     integrity: sha256-o8p6SLYmVPqzXZhQFd2hGAWEwBoXl1swxLG/scpJ0V0=
     dependencies: []
   profunctor:
-    type: local
-    path: /home/srghma/projects/purescript-profunctor
+    type: registry
+    version: 6.0.1
+    integrity: sha256-E58hSYdJvF2Qjf9dnWLPlJKh2Z2fLfFLkQoYi16vsFk=
     dependencies:
       - control
       - distributive
@@ -1366,15 +1193,3 @@ packages:
     version: 6.0.0
     integrity: sha256-IqIYW4Vkevn8sI+6aUwRGvd87tVL36BBeOr0cGAE7t0=
     dependencies: []
-  web-streams:
-    type: registry
-    version: 4.0.0
-    integrity: sha256-02HgXIk6R+pU9fWOX42krukAI1QkCbLKcCv3b4Jq6WI=
-    dependencies:
-      - arraybuffer-types
-      - effect
-      - exceptions
-      - js-promise
-      - nullable
-      - prelude
-      - tuples
