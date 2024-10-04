@@ -7,6 +7,8 @@ package:
       githubOwner: purescript-node
       githubRepo: purescript-node-fs
   dependencies:
+    - aff
+    - arrays
     - datetime
     - effect
     - either
@@ -22,16 +24,19 @@ package:
     - nullable
     - partial
     - prelude
-    - strings
-    - unsafe-coerce
     - refs
+    - strings
+    - tuples
+    - unsafe-coerce
   test:
     main: Test.Main
     dependencies:
-      - console
       - aff
       - arrays
       - assert
+      - console
+      - foldable-traversable
+      - node-event-emitter
 workspace:
   packageSet:
     registry: 60.2.1
