@@ -11,6 +11,7 @@ import Effect.Exception (Error, catchException, error, message, throw, throwExce
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
 import Node.FS (FileFlags(..), SymlinkType(..))
+import Node.FS.Aff (rmOptionsDefault)
 import Node.FS.Async as A
 import Node.FS.Constants (copyFile_EXCL, r_OK, w_OK)
 import Node.FS.Perms (mkPerms, permsAll)
@@ -80,6 +81,7 @@ main = do
   log "statusChangedTime:"
   log $ show $ statusChangedTime stats
 
+  S.rm' (fp [ "tmp", "TestSymlink.js" ]) (rmOptionsDefault { force = true })
   S.symlink (fp [ "tmp", "Test1.js" ]) (fp [ "tmp", "TestSymlink.js" ]) FileLink
 
   lstats <- S.lstat (fp [ "tmp", "TestSymlink.js" ])

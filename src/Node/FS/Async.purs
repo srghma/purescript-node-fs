@@ -20,8 +20,12 @@ module Node.FS.Async
   , unlink
   , rmdir
   , rmdir'
+  , rmdirOptionsDefault
+  , RmdirOptions
   , rm
   , rm'
+  , rmOptionsDefault
+  , RmOptions
   , mkdir
   , mkdir'
   , readdir
@@ -65,8 +69,10 @@ module Node.FS.Async
   , lchown
   , lutimes
   -- , openAsBlob
-  , opendir'
   , opendir
+  , opendir'
+  , OpendirOptions
+  , opendirOptionsDefault
   , readv
   , statfs
   -- , unwatchFile
@@ -158,8 +164,8 @@ foreign import symlinkImpl :: EffectFn4 FilePath FilePath (Nullable String) (JSC
 foreign import readlinkImpl :: EffectFn2 FilePath (JSCallback FilePath) Unit
 foreign import realpathImpl :: forall cache. EffectFn3 FilePath { | cache } (JSCallback FilePath) Unit
 foreign import unlinkImpl :: EffectFn2 FilePath (JSCallback Unit) Unit
-foreign import rmdirImpl :: EffectFn3 FilePath { maxRetries :: Int, retryDelay :: Int } (JSCallback Unit) Unit
-foreign import rmImpl :: EffectFn3 FilePath { force :: Boolean, maxRetries :: Int, recursive :: Boolean, retryDelay :: Int } (JSCallback Unit) Unit
+foreign import rmdirImpl :: EffectFn3 FilePath RmdirOptions (JSCallback Unit) Unit
+foreign import rmImpl :: EffectFn3 FilePath RmOptions (JSCallback Unit) Unit
 foreign import mkdirImpl :: EffectFn3 FilePath { recursive :: Boolean, mode :: String } (JSCallback Unit) Unit
 -- if { withFileTypes: false, recursive: false } => ['Tidy']
 -- if { withFileTypes: false, recursive: true } => [ 'Tidy', 'Tidy/Codegen', 'Tidy/Codegen.purs', 'Tidy/Codegen/Class.purs', .. ]
@@ -290,32 +296,42 @@ unlink
   -> Effect Unit
 unlink file cb = runEffectFn2 unlinkImpl file (handleCallback cb)
 
+type RmdirOptions = { maxRetries :: Int, retryDelay :: Int }
+
+rmdirOptionsDefault :: RmdirOptions
+rmdirOptionsDefault = { maxRetries: 0, retryDelay: 100 }
+
 -- | Deletes a directory.
 rmdir
   :: FilePath
   -> Callback Unit
   -> Effect Unit
-rmdir path cb = rmdir' path { maxRetries: 0, retryDelay: 100 } cb
+rmdir path cb = rmdir' path rmdirOptionsDefault cb
 
 -- | Deletes a directory with options.
 rmdir'
   :: FilePath
-  -> { maxRetries :: Int, retryDelay :: Int }
+  -> RmdirOptions
   -> Callback Unit
   -> Effect Unit
 rmdir' path opts cb = runEffectFn3 rmdirImpl path opts (handleCallback cb)
+
+type RmOptions = { force :: Boolean, maxRetries :: Int, recursive :: Boolean, retryDelay :: Int }
+
+rmOptionsDefault :: RmOptions
+rmOptionsDefault = { force: false, maxRetries: 100, recursive: false, retryDelay: 1000 }
 
 -- | Deletes a file or directory.
 rm
   :: FilePath
   -> Callback Unit
   -> Effect Unit
-rm path = rm' path { force: false, maxRetries: 100, recursive: false, retryDelay: 1000 }
+rm path = rm' path rmOptionsDefault
 
 -- | Deletes a file or directory with options.
 rm'
   :: FilePath
-  -> { force :: Boolean, maxRetries :: Int, recursive :: Boolean, retryDelay :: Int }
+  -> RmOptions
   -> Callback Unit
   -> Effect Unit
 rm' path opts cb = runEffectFn3 rmImpl path opts (handleCallback cb)
@@ -655,16 +671,21 @@ lutimes file atime mtime cb = runEffectFn4 lutimesImpl file (datetimeToUnixEpoch
 -- openAsBlob :: FilePath -> Promise Blob -> Effect Unit
 -- openAsBlob path cb = runEffectFn2 openAsBlobImpl path (handleCallback cb)
 
+type OpendirOptions = { encoding :: Encoding, bufferSize :: Int, recursive :: Boolean }
+
+opendirOptionsDefault :: OpendirOptions
+opendirOptionsDefault = { bufferSize: 32, recursive: false, encoding: UTF8 }
+
 -- | Open a directory. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_opendir_path_options_callback)
 -- | for details.
-opendir' :: FilePath -> { encoding :: Encoding, bufferSize :: Int, recursive :: Boolean } -> Callback Dir -> Effect Unit
+opendir' :: FilePath -> OpendirOptions -> Callback Dir -> Effect Unit
 opendir' path { encoding, bufferSize, recursive } cb = runEffectFn3 opendirImpl path { encoding: encodingToNode encoding, bufferSize, recursive } (handleCallback cb)
 
 -- | Open a directory. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_opendir_path_options_callback)
 -- | for details.
 -- | NOTE: encoding: 'buffer' is not supported, will throw error "TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received an instance of Buffer"
 opendir :: FilePath -> Callback Dir -> Effect Unit
-opendir path = opendir' path { bufferSize: 32, recursive: false, encoding: UTF8 }
+opendir path = opendir' path opendirOptionsDefault
 
 -- | Read from a file descriptor into a buffer array. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_readv_fd_buffers_position_callback)
 -- | for details.

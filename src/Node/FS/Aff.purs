@@ -83,8 +83,8 @@ import Effect.Aff (Aff, Error, makeAff, nonCanceler)
 import Node.Buffer (Buffer)
 import Node.Encoding (Encoding)
 import Node.FS as F
-import Node.FS.Async (CpOptions)
-import Node.FS.Async (CpOptions, CpForce(..), cpOptionsDefault) as Exports
+import Node.FS.Async (CpOptions, CpForce(..), cpOptionsDefault, OpendirOptions , opendirOptionsDefault, RmOptions, rmOptionsDefault, RmdirOptions, rmdirOptionsDefault) as Exports
+import Node.FS.Async (CpOptions, OpendirOptions, RmdirOptions, RmOptions)
 import Node.FS.Async as A
 import Node.FS.Constants (AccessMode, CopyMode)
 import Node.FS.Dir (Dir)
@@ -264,7 +264,7 @@ rmdir = toAff1 A.rmdir
 -- |
 -- | Deletes a directory with options.
 -- |
-rmdir' :: FilePath -> { maxRetries :: Int, retryDelay :: Int } -> Aff Unit
+rmdir' :: FilePath -> RmdirOptions -> Aff Unit
 rmdir' = toAff2 A.rmdir'
 
 -- |
@@ -276,7 +276,7 @@ rm = toAff1 A.rm
 -- |
 -- | Deletes a file or directory with options.
 -- |
-rm' :: FilePath -> { force :: Boolean, maxRetries :: Int, recursive :: Boolean, retryDelay :: Int } -> Aff Unit
+rm' :: FilePath -> RmOptions -> Aff Unit
 rm' = toAff2 A.rm'
 
 -- |
@@ -502,7 +502,7 @@ opendir = toAff1 A.opendir
 
 -- | Open a directory. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_opendir_path_options_callback)
 -- | for details.
-opendir' :: FilePath -> { bufferSize :: Int, recursive :: Boolean, encoding :: Encoding } -> Aff Dir
+opendir' :: FilePath -> OpendirOptions -> Aff Dir
 opendir' = toAff2 A.opendir'
 
 -- | Read from a file descriptor into a buffer array. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_readv_fd_buffers_position_callback)
