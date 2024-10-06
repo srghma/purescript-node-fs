@@ -80,9 +80,6 @@ module Node.FS.Sync
   , writev
   ) where
 
-import Node.FS.Constants (AccessMode, CopyMode, FileFlags, defaultAccessMode, defaultCopyMode, fileFlagsToNode)
-import Node.FS.Options (AppendFileBufferOptions, AppendFileOptionsInternal, AppendFileStringOptions, CpOptions, CpOptionsInternal, FdReadOptions, FdReadOptionsInternal, FdWriteOptions, FdWriteOptionsInternal, GlobDirentOptions, GlobFilePathOptions, GlobOptionsInternal, MkdirOptions, MkdirOptionsInternal, OpendirOptions, OpendirOptionsInternal, ReadFileBufferOptions, ReadFileOptionsInternal, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, ReaddirOptionsInternal, RealpathOptions, RealpathOptionsInternal, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileOptionsInternal, WriteFileStringOptions, appendFileBufferOptionsDefault, appendFileBufferOptionsToInternal, appendFileStringOptionsDefault, appendFileStringOptionsToInternal, cpOptionsDefault, cpOptionsToCpOptionsInternal, fdReadOptionsToInternal, fdWriteOptionsToInternal, globDirentOptionsDefault, globDirentOptionsToInternal, globFilePathOptionsDefault, globFilePathOptionsToInternal, mkdirOptionsDefault, mkdirOptionsToInternal, opendirOptionsDefault, opendirOptionsToInternal, readFileBufferOptionsDefault, readFileBufferOptionsToInternal, readFileStringOptionsDefault, readFileStringOptionsToInternal, readdirBufferOptionsDefault, readdirBufferOptionsToInternal, readdirDirentBufferOptionsDefault, readdirDirentBufferOptionsToInternal, readdirDirentOptionsDefault, readdirDirentOptionsToInternal, readdirFilePathOptionsDefault, readdirFilePathOptionsToInternal, realpathOptionsDefault, realpathOptionsToInternal, rmOptionsDefault, rmdirOptionsDefault, writeFileBufferOptionsDefault, writeFileBufferOptionsToInternal, writeFileStringOptionsDefault, writeFileStringOptionsToInternal)
-import Node.FS.Types (BufferLength, BufferOffset, ByteCount, FileDescriptor, FileMode, FilePosition, SymlinkType, symlinkTypeToNode)
 import Prelude
 
 import Data.DateTime (DateTime)
@@ -94,11 +91,14 @@ import Effect.Exception (Error, try)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, EffectFn5, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4, runEffectFn5)
 import Node.Buffer (Buffer, size)
 import Node.Encoding (Encoding(..), encodingToNode)
+import Node.FS.Constants (AccessMode, CopyMode, FileFlags, defaultAccessMode, defaultCopyMode, fileFlagsToNode)
 import Node.FS.Dir (Dir)
 import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
 import Node.FS.Internal.Utils (datetimeToUnixEpochTimeInSeconds)
+import Node.FS.Options (AppendFileBufferOptions, AppendFileOptionsInternal, AppendFileStringOptions, CpOptions, CpOptionsInternal, FdReadOptions, FdReadOptionsInternal, FdWriteOptions, FdWriteOptionsInternal, GlobDirentOptions, GlobFilePathOptions, GlobOptionsInternal, MkdirOptions, MkdirOptionsInternal, OpendirOptions, OpendirOptionsInternal, ReadFileBufferOptions, ReadFileOptionsInternal, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, ReaddirOptionsInternal, RealpathOptions, RealpathOptionsInternal, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileOptionsInternal, WriteFileStringOptions, appendFileBufferOptionsDefault, appendFileBufferOptionsToInternal, appendFileStringOptionsDefault, appendFileStringOptionsToInternal, cpOptionsDefault, cpOptionsToCpOptionsInternal, fdReadOptionsToInternal, fdWriteOptionsToInternal, globDirentOptionsDefault, globDirentOptionsToInternal, globFilePathOptionsDefault, globFilePathOptionsToInternal, mkdirOptionsDefault, mkdirOptionsToInternal, opendirOptionsDefault, opendirOptionsToInternal, readFileBufferOptionsDefault, readFileBufferOptionsToInternal, readFileStringOptionsDefault, readFileStringOptionsToInternal, readdirBufferOptionsDefault, readdirBufferOptionsToInternal, readdirDirentBufferOptionsDefault, readdirDirentBufferOptionsToInternal, readdirDirentOptionsDefault, readdirDirentOptionsToInternal, readdirFilePathOptionsDefault, readdirFilePathOptionsToInternal, realpathOptionsDefault, realpathOptionsToInternal, rmOptionsDefault, rmdirOptionsDefault, writeFileBufferOptionsDefault, writeFileBufferOptionsToInternal, writeFileStringOptionsDefault, writeFileStringOptionsToInternal)
 import Node.FS.Perms (Perms, permsToString)
 import Node.FS.Stats (Stats)
+import Node.FS.Types (BufferLength, BufferOffset, ByteCount, FileDescriptor, FileMode, FilePosition, SymlinkType, EncodingString, symlinkTypeToNode)
 import Node.Path (FilePath)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -135,11 +135,11 @@ readWithOptionsSyncImpl = unsafeCoerce readSyncImpl
 foreign import writeSyncImpl :: EffectFn5 FileDescriptor Buffer BufferOffset BufferLength (Nullable FilePosition) ByteCount
 
 -- https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback
-writeWithOptionsSyncImpl :: EffectFn2 FileDescriptor FdWriteOptionsInternal ByteCount
-writeWithOptionsSyncImpl = unsafeCoerce writeSyncImpl
+writeBufferWithOptionsSyncImpl :: EffectFn3 FileDescriptor Buffer FdWriteOptionsInternal ByteCount
+writeBufferWithOptionsSyncImpl = unsafeCoerce writeSyncImpl
 
 -- https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback
-writeStringSyncImpl :: EffectFn4 FileDescriptor String (Nullable FilePosition) String ByteCount
+writeStringSyncImpl :: EffectFn4 FileDescriptor String (Nullable FilePosition) EncodingString ByteCount
 writeStringSyncImpl = unsafeCoerce writeSyncImpl
 
 foreign import closeSyncImpl :: EffectFn1 FileDescriptor Unit
@@ -164,8 +164,7 @@ access :: FilePath -> Effect (Maybe Error)
 access = flip access' defaultAccessMode
 
 access' :: FilePath -> AccessMode -> Effect (Maybe Error)
-access' path mode = do
-  map blush $ try $ runEffectFn2 accessSyncImpl path mode
+access' path mode = map blush $ try $ runEffectFn2 accessSyncImpl path mode
 
 copyFile :: FilePath -> FilePath -> Effect Unit
 copyFile src dest = runEffectFn3 copyFileSyncImpl src dest defaultCopyMode
@@ -467,7 +466,7 @@ fdRead
 fdRead fd buff off len pos =
   runEffectFn5 readSyncImpl fd buff off len (toNullable pos)
 
--- | Read from a file asynchronously. See the [Node Documentation](https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback)
+-- | Read from a file synchronously. See the [Node Documentation](https://nodejs.org/docs/latest/api/fs.html#fsreadsyncfd-buffer-offset-length-position)
 -- | for details.
 fdRead'
   :: FileDescriptor
@@ -497,13 +496,14 @@ fdWrite
 fdWrite fd buff off len pos =
   runEffectFn5 writeSyncImpl fd buff off len (toNullable pos)
 
--- | Write from a file asynchronously. See the [Node Documentation](https://nodejs.org/docs/latest/api/fs.html#fswritefd-options-callback)
+-- | Write from a file synchronously. See the [Node Documentation](https://nodejs.org/docs/latest/api/fs.html#fswritefd-options-callback)
 -- | for details.
 fdWrite'
   :: FileDescriptor
+  -> Buffer
   -> FdWriteOptions
   -> Effect ByteCount
-fdWrite' fd options = runEffectFn2 writeWithOptionsSyncImpl fd (fdWriteOptionsToInternal options)
+fdWrite' fd buffer options = runEffectFn3 writeBufferWithOptionsSyncImpl fd buffer (fdWriteOptionsToInternal options)
 
 -- It is unsafe to use fs.write() multiple times on the same file without waiting for the callback. For this scenario, fs.createWriteStream() is recommended.
 fdWriteString
@@ -529,7 +529,7 @@ fdAppend fd buff = do
 fdClose :: FileDescriptor -> Effect Unit
 fdClose fd = runEffectFn1 closeSyncImpl fd
 
--- | Copy a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fspromises_copyfile_src_dest_mode)
+-- | Copy a file synchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fspromises_copyfile_src_dest_mode)
 -- | for details.
 cp :: FilePath -> FilePath -> Effect Unit
 cp src dest = cp' src dest cpOptionsDefault

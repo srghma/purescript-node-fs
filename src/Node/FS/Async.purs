@@ -92,12 +92,13 @@ import Node.Buffer (Buffer, size)
 import Node.Encoding (Encoding(..), encodingToNode)
 import Node.FS (FileDescriptor, ByteCount, FilePosition, BufferLength, BufferOffset, FileMode, SymlinkType, symlinkTypeToNode)
 import Node.FS.Constants (AccessMode, CopyMode, FileFlags, defaultAccessMode, defaultCopyMode, fileFlagsToNode)
-import Node.FS.Internal.Utils (Callback0, Callback1, JSCallback0, JSCallback1, JSCallback2, datetimeToUnixEpochTimeInSeconds, handleCallback0, handleCallback1, handleCallback1Tuple)
-import Node.FS.Options (AppendFileBufferOptions, AppendFileOptionsInternal, AppendFileStringOptions, CpOptions, CpOptionsInternal, FdReadOptions, FdReadOptionsInternal, FdWriteOptions, FdWriteOptionsInternal, GlobDirentOptions, GlobFilePathOptions, GlobOptionsInternal, MkdirOptions, MkdirOptionsInternal, OpendirOptions, OpendirOptionsInternal, ReadFileBufferOptions, ReadFileOptionsInternal, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, ReaddirOptionsInternal, RealpathOptions, RealpathOptionsInternal, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileOptionsInternal, WriteFileStringOptions, appendFileBufferOptionsDefault, appendFileBufferOptionsToInternal, appendFileStringOptionsDefault, appendFileStringOptionsToInternal, cpOptionsDefault, cpOptionsToCpOptionsInternal, fdReadOptionsToInternal, fdWriteOptionsToInternal, globDirentOptionsDefault, globDirentOptionsToInternal, globFilePathOptionsDefault, globFilePathOptionsToInternal, mkdirOptionsDefault, mkdirOptionsToInternal, opendirOptionsDefault, opendirOptionsToInternal, readFileBufferOptionsDefault, readFileBufferOptionsToInternal, readFileStringOptionsDefault, readFileStringOptionsToInternal, readdirBufferOptionsDefault, readdirBufferOptionsToInternal, readdirDirentBufferOptionsDefault, readdirDirentBufferOptionsToInternal, readdirDirentOptionsDefault, readdirDirentOptionsToInternal, readdirFilePathOptionsDefault, readdirFilePathOptionsToInternal, realpathOptionsDefault, realpathOptionsToInternal, rmOptionsDefault, rmdirOptionsDefault, writeFileBufferOptionsDefault, writeFileBufferOptionsToInternal, writeFileStringOptionsDefault, writeFileStringOptionsToInternal)
 import Node.FS.Dir (Dir)
 import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
+import Node.FS.Internal.Utils (Callback0, Callback1, JSCallback0, JSCallback1, JSCallback2, datetimeToUnixEpochTimeInSeconds, handleCallback0, handleCallback1, handleCallback1Tuple)
+import Node.FS.Options (AppendFileBufferOptions, AppendFileOptionsInternal, AppendFileStringOptions, CpOptions, CpOptionsInternal, FdReadOptions, FdReadOptionsInternal, FdWriteOptions, FdWriteOptionsInternal, GlobDirentOptions, GlobFilePathOptions, GlobOptionsInternal, MkdirOptions, MkdirOptionsInternal, OpendirOptions, OpendirOptionsInternal, ReadFileBufferOptions, ReadFileOptionsInternal, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, ReaddirOptionsInternal, RealpathOptions, RealpathOptionsInternal, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileOptionsInternal, WriteFileStringOptions, appendFileBufferOptionsDefault, appendFileBufferOptionsToInternal, appendFileStringOptionsDefault, appendFileStringOptionsToInternal, cpOptionsDefault, cpOptionsToCpOptionsInternal, fdReadOptionsToInternal, fdWriteOptionsToInternal, globDirentOptionsDefault, globDirentOptionsToInternal, globFilePathOptionsDefault, globFilePathOptionsToInternal, mkdirOptionsDefault, mkdirOptionsToInternal, opendirOptionsDefault, opendirOptionsToInternal, readFileBufferOptionsDefault, readFileBufferOptionsToInternal, readFileStringOptionsDefault, readFileStringOptionsToInternal, readdirBufferOptionsDefault, readdirBufferOptionsToInternal, readdirDirentBufferOptionsDefault, readdirDirentBufferOptionsToInternal, readdirDirentOptionsDefault, readdirDirentOptionsToInternal, readdirFilePathOptionsDefault, readdirFilePathOptionsToInternal, realpathOptionsDefault, realpathOptionsToInternal, rmOptionsDefault, rmdirOptionsDefault, writeFileBufferOptionsDefault, writeFileBufferOptionsToInternal, writeFileStringOptionsDefault, writeFileStringOptionsToInternal)
 import Node.FS.Perms (Perms, permsToString)
 import Node.FS.Stats (Stats)
+import Node.FS.Types (EncodingString)
 import Node.Path (FilePath)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -134,12 +135,10 @@ readWithOptionsImpl = unsafeCoerce readImpl
 
 foreign import writeImpl :: EffectFn6 FileDescriptor Buffer BufferOffset BufferLength (Nullable FilePosition) (JSCallback1 ByteCount) Unit
 
--- https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback
-writeWithOptionsImpl :: EffectFn3 FileDescriptor FdWriteOptionsInternal (JSCallback2 ByteCount Buffer) Unit
-writeWithOptionsImpl = unsafeCoerce writeImpl
+writeBufferWithOptionsImpl :: EffectFn4 FileDescriptor Buffer FdWriteOptionsInternal (JSCallback2 ByteCount Buffer) Unit
+writeBufferWithOptionsImpl = unsafeCoerce writeImpl
 
--- https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback
-writeStringImpl :: EffectFn5 FileDescriptor String (Nullable FilePosition) String (JSCallback2 ByteCount String) Unit
+writeStringImpl :: EffectFn5 FileDescriptor String (Nullable FilePosition) EncodingString (JSCallback2 ByteCount String) Unit
 writeStringImpl = unsafeCoerce writeImpl
 
 foreign import closeImpl :: EffectFn2 FileDescriptor JSCallback0 Unit
@@ -545,10 +544,11 @@ fdWrite fd buff off len pos cb = runEffectFn6 writeImpl fd buff off len (toNulla
 -- | for details.
 fdWrite'
   :: FileDescriptor
+  -> Buffer
   -> FdWriteOptions
   -> Callback1 (Tuple ByteCount Buffer)
   -> Effect Unit
-fdWrite' fd options cb = runEffectFn3 writeWithOptionsImpl fd (fdWriteOptionsToInternal options) (handleCallback1Tuple cb)
+fdWrite' fd buffer options cb = runEffectFn4 writeBufferWithOptionsImpl fd buffer (fdWriteOptionsToInternal options) (handleCallback1Tuple cb)
 
 -- It is unsafe to use fs.write() multiple times on the same file without waiting for the callback. For this scenario, fs.createWriteStream() is recommended.
 fdWriteString

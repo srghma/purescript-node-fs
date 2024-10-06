@@ -378,9 +378,10 @@ fdWrite = toAff5 A.fdWrite
 -- | for details.
 fdWrite'
   :: FileDescriptor
+  -> Buffer
   -> FdWriteOptions
   -> Aff (Tuple ByteCount Buffer)
-fdWrite' = toAff2 A.fdWrite'
+fdWrite' = toAff3 A.fdWrite'
 
 -- It is unsafe to use fs.write() multiple times on the same file without waiting for the callback. For this scenario, fs.createWriteStream() is recommended.
 fdWriteString
