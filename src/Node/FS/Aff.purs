@@ -33,10 +33,15 @@ module Node.FS.Aff
   , readdirDirentBuffer'
   , utimes
   , readFile
+  , readFile'
   , readTextFile
+  , readTextFile'
   , writeFile
+  , writeFile'
   , writeTextFile
+  , writeTextFile'
   , appendFile
+  , appendFile'
   , appendTextFile
   , fdOpen
   , fdRead
@@ -85,7 +90,7 @@ import Node.Buffer (Buffer)
 import Node.Encoding (Encoding)
 import Node.FS.Types (BufferLength, BufferOffset, ByteCount, FileDescriptor, FileMode, FilePosition, SymlinkType)
 import Node.FS.Internal.AffUtils (toAff1, toAff2, toAff3, toAff4, toAff5)
-import Node.FS.Options (CpOptions, FdReadOptions, FdWriteOptions, OpendirOptions, RealpathOptions, RmOptions, RmdirOptions)
+import Node.FS.Options (AppendFileBufferOptions, CpOptions, FdReadOptions, FdWriteOptions, GlobDirentOptions, GlobFilePathOptions, MkdirOptions, OpendirOptions, ReadFileBufferOptions, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, RealpathOptions, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileStringOptions)
 import Node.FS.Constants (AccessMode, CopyMode, FileFlags)
 import Node.FS.Async as A
 import Node.FS.Dir (Dir)
@@ -226,7 +231,7 @@ mkdir = toAff1 A.mkdir
 -- |
 -- | Makes a new directory with all of its options.
 -- |
-mkdir' :: FilePath -> { recursive :: Boolean, mode :: Perms } -> Aff Unit
+mkdir' :: FilePath -> MkdirOptions -> Aff Unit
 mkdir' = toAff2 A.mkdir'
 
 -- |
@@ -236,7 +241,7 @@ readdir :: FilePath -> Aff (Array FilePath)
 readdir = toAff1 A.readdir
 
 -- | Reads the contents of a directory with options.
-readdir' :: FilePath -> { recursive :: Boolean, encoding :: Encoding } -> Aff (Array FilePath)
+readdir' :: FilePath -> ReaddirFilePathOptions -> Aff (Array FilePath)
 readdir' = toAff2 A.readdir'
 
 -- | Reads the contents of a directory and returns an Aff (Array Buffer).
@@ -244,7 +249,7 @@ readdirBuffer :: FilePath -> Aff (Array Buffer)
 readdirBuffer = toAff1 A.readdirBuffer
 
 -- | Reads the contents of a directory with options and returns Aff (Array Buffer).
-readdirBuffer' :: FilePath -> { recursive :: Boolean } -> Aff (Array Buffer)
+readdirBuffer' :: FilePath -> ReaddirBufferOptions -> Aff (Array Buffer)
 readdirBuffer' = toAff2 A.readdirBuffer'
 
 -- | Reads the contents of a directory and returns an Aff (Array (Dirent DirentNameTypeString)).
@@ -252,7 +257,7 @@ readdirDirent :: FilePath -> Aff (Array (Dirent DirentNameTypeString))
 readdirDirent = toAff1 A.readdirDirent
 
 -- | Reads the contents of a directory with options and returns Aff (Array (Dirent DirentNameTypeString)).
-readdirDirent' :: FilePath -> { recursive :: Boolean, encoding :: Encoding } -> Aff (Array (Dirent DirentNameTypeString))
+readdirDirent' :: FilePath -> ReaddirDirentOptions -> Aff (Array (Dirent DirentNameTypeString))
 readdirDirent' = toAff2 A.readdirDirent'
 
 -- | Reads the contents of a directory.
@@ -264,7 +269,7 @@ readdirDirentBuffer = toAff1 A.readdirDirentBuffer
 -- | Reads the contents of a directory.
 readdirDirentBuffer'
   :: FilePath
-  -> { recursive :: Boolean }
+  -> ReaddirDirentBufferOptions
   -> Aff (Array (Dirent DirentNameTypeBuffer))
 readdirDirentBuffer' = toAff2 A.readdirDirentBuffer'
 
@@ -280,11 +285,17 @@ utimes = toAff3 A.utimes
 readFile :: FilePath -> Aff Buffer
 readFile = toAff1 A.readFile
 
+readFile' :: FilePath -> ReadFileBufferOptions -> Aff Buffer
+readFile' = toAff2 A.readFile'
+
 -- |
 -- | Reads the entire contents of a text file with the specified encoding.
 -- |
 readTextFile :: Encoding -> FilePath -> Aff String
 readTextFile = toAff2 A.readTextFile
+
+readTextFile' :: FilePath -> ReadFileStringOptions -> Aff String
+readTextFile' = toAff2 A.readTextFile'
 
 -- |
 -- | Writes a buffer to a file.
@@ -292,17 +303,26 @@ readTextFile = toAff2 A.readTextFile
 writeFile :: FilePath -> Buffer -> Aff Unit
 writeFile = toAff2 A.writeFile
 
+writeFile' :: FilePath -> Buffer -> WriteFileBufferOptions -> Aff Unit
+writeFile' = toAff3 A.writeFile'
+
 -- |
 -- | Writes text to a file using the specified encoding.
 -- |
 writeTextFile :: Encoding -> FilePath -> String -> Aff Unit
 writeTextFile = toAff3 A.writeTextFile
 
+writeTextFile' :: FilePath -> String -> WriteFileStringOptions -> Aff Unit
+writeTextFile' = toAff3 A.writeTextFile'
+
 -- |
 -- | Appends the contents of a buffer to a file.
 -- |
 appendFile :: FilePath -> Buffer -> Aff Unit
 appendFile = toAff2 A.appendFile
+
+appendFile' :: FilePath -> Buffer -> AppendFileBufferOptions -> Aff Unit
+appendFile' = toAff3 A.appendFile'
 
 -- |
 -- | Appends text to a file using the specified encoding.
@@ -429,13 +449,13 @@ futimes = toAff3 A.futimes
 glob :: Array FilePath -> Aff (Array FilePath)
 glob = toAff1 A.glob
 
-glob' :: Array FilePath -> { cwd :: Maybe FilePath, exclude :: Maybe (FilePath -> Boolean) } -> Aff (Array FilePath)
+glob' :: Array FilePath -> GlobFilePathOptions -> Aff (Array FilePath)
 glob' = toAff2 A.glob'
 
 globDirent :: Array FilePath -> Aff (Array (Dirent DirentNameTypeString))
 globDirent = toAff1 A.globDirent
 
-globDirent' :: Array FilePath -> { cwd :: Maybe FilePath, exclude :: Maybe (Dirent DirentNameTypeString -> Boolean) } -> Aff (Array (Dirent DirentNameTypeString))
+globDirent' :: Array FilePath -> GlobDirentOptions -> Aff (Array (Dirent DirentNameTypeString))
 globDirent' = toAff2 A.globDirent'
 
 -- | Change permissions on a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lchmod_path_mode_callback)
