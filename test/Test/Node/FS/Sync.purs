@@ -153,7 +153,7 @@ main = do
   fd0 <- S.fdOpen fdFile W (Just 420)
   buf0 <- Buffer.fromString "[ 42 ]" UTF8
   _bytes0 <- S.fdAppend fd0 buf0
-  S.fdFlush fd0
+  S.fsync fd0
   S.fdClose fd0
   fd1 <- S.fdOpen fdFile R Nothing
   buf1 <- Buffer.create =<< Buffer.size buf0

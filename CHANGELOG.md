@@ -8,7 +8,7 @@ Breaking changes:
 
 New features:
 
-- Add functions to `Node.FS.Async`
+- Add functions to `Node.FS.Async`, `Node.FS.Aff`, `Node.FS.Sync`
 
   - readdir'
   - readdirBuffer
@@ -39,29 +39,7 @@ New features:
   - statfs
   - writev
 
-- Add functions to `Node.FS.Aff`
-
-  - cp
-  - cp'
-  - fchmod
-  - fchown
-  - fdatasync
-  - fstat
-  - fsync
-  - ftruncate
-  - futimes
-  - glob
-  - glob'
-  - globDirent
-  - globDirent'
-  - lchmod
-  - lchown
-  - lutimes
-  - opendir
-  - opendir'
-  - readv
-  - statfs
-  - writev
+- Deprecate `Node.FS.Sync.fdFlush`, `Node.FS.Sync.fsync` should be used instead
 
 - Add modules `Dir`, `Dir.Aff`, `Dirent`
 

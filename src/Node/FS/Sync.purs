@@ -52,7 +52,6 @@ module Node.FS.Sync
   , fdWrite'
   , fdWriteString
   , fdAppend
-  , fdFlush
   , fdClose
   , cp
   , cp'
@@ -101,7 +100,6 @@ import Node.FS.Internal.Utils (datetimeToUnixEpochTimeInSeconds)
 import Node.FS.Perms (Perms, permsToString)
 import Node.FS.Stats (Stats)
 import Node.Path (FilePath)
-import Prim.TypeError (class Warn, Text)
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import accessSyncImpl :: EffectFn2 FilePath AccessMode Unit
@@ -525,11 +523,6 @@ fdAppend
 fdAppend fd buff = do
   sz <- size buff
   fdWrite fd buff 0 sz Nothing
-
--- | Flush a file synchronously.  See the [Node documentation](http://nodejs.org/api/fs.html#fs_fs_fsyncsync_fd)
--- | for details.
-fdFlush :: Warn (Text "Deprecated, use fsync") => FileDescriptor -> Effect Unit
-fdFlush = fsync
 
 -- | Close a file synchronously. See the [Node documentation](http://nodejs.org/api/fs.html#fs_fs_closesync_fd)
 -- | for details.
