@@ -9,7 +9,7 @@ import Effect (Effect)
 import Effect.Exception (Error)
 import Effect.Uncurried (EffectFn1, EffectFn2, mkEffectFn1, runEffectFn1, runEffectFn2)
 import Node.FS.Dirent (Dirent, DirentNameTypeString)
-import Node.FS.Internal.Utils (Callback0, JSCallback0, JSCallback1, handleCallback1) 
+import Node.FS.Internal.Utils (Callback0, JSCallback0, JSCallback1, Callback1, handleCallback0, handleCallback1)
 import Node.Path (FilePath)
 
 -- Foreign imports for the Dir class
@@ -25,15 +25,15 @@ foreign import path :: Dir -> FilePath
 
 -- | Asynchronously close the directory's underlying resource handle.
 close :: Dir -> Callback0 -> Effect Unit
-close dir callback = runEffectFn2 closeImpl dir (mkEffectFn1 $ (callback <<< toMaybe))
+close dir cb = runEffectFn2 closeImpl dir (handleCallback0 cb)
 
 -- | Synchronously close the directory's underlying resource handle.
 closeSync :: Dir -> Effect Unit
 closeSync = runEffectFn1 closeSyncImpl
 
 -- | Asynchronously read the next directory entry.
-read :: Dir -> (Either Error (Maybe (Dirent DirentNameTypeString)) -> Effect Unit) -> Effect Unit
-read dir callback = runEffectFn2 readImpl dir (handleCallback1 (callback <<< map toMaybe))
+read :: Dir -> (Callback1 (Maybe (Dirent DirentNameTypeString))) -> Effect Unit
+read dir cb = runEffectFn2 readImpl dir (handleCallback1 (cb <<< map toMaybe))
 
 -- | Synchronously read the next directory entry.
 readSync :: Dir -> Effect (Maybe (Dirent DirentNameTypeString))

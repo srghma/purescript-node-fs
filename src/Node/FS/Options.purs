@@ -1,6 +1,6 @@
 module Node.FS.Options where
 
-import Node.FS.Types (BufferLength, BufferOffset, FileMode, FilePosition)
+import Node.FS.Types (BufferLength, BufferOffset, EncodingString, FileMode, FilePosition)
 import Prelude
 
 import Data.Function.Uncurried (Fn2, mkFn2)
@@ -11,7 +11,7 @@ import Foreign (Foreign)
 import Foreign as Foreign
 import Node.Buffer (Buffer)
 import Node.Encoding (Encoding(..), encodingToNode)
-import Node.FS.Constants (FileFlags(..), fileFlagsToNode) 
+import Node.FS.Constants (FileFlags(..), fileFlagsToNode)
 import Node.FS.Dirent (Dirent, DirentNameTypeString)
 import Node.FS.Perms (Perms, all, mkPerms, permsToString, read, write)
 import Node.Path (FilePath)
@@ -39,7 +39,7 @@ mkdirOptionsToInternal { recursive, mode } = { recursive, mode: permsToString mo
 
 ---------
 
-type RealpathOptionsInternal = { encoding :: String }
+type RealpathOptionsInternal = { encoding :: EncodingString }
 type RealpathOptions = { encoding :: Encoding }
 
 realpathOptionsDefault :: RealpathOptions
@@ -318,7 +318,7 @@ globDirentOptionsToInternal { cwd, exclude } = { cwd: toNullable cwd, exclude: t
 
 ------------------
 
-type OpendirOptionsInternal = { encoding :: String, bufferSize :: Int, recursive :: Boolean }
+type OpendirOptionsInternal = { encoding :: EncodingString, bufferSize :: Int, recursive :: Boolean }
 type OpendirOptions = { encoding :: Encoding, bufferSize :: Int, recursive :: Boolean }
 
 opendirOptionsDefault :: OpendirOptions

@@ -12,15 +12,20 @@ import Data.Time.Duration (Milliseconds(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Exception (Error)
-import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, mkEffectFn2, mkEffectFn3)
+import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, mkEffectFn1, mkEffectFn2, mkEffectFn3)
 
 type JSCallback0 = EffectFn1 (Nullable Error) Unit
 type JSCallback1 a = EffectFn2 (Nullable Error) a Unit
 type JSCallback2 a b = EffectFn3 (Nullable Error) a b Unit
 
 -- | Type synonym for callback functions.
-type Callback0 = Maybe Error -> Effect Unit
+type Callback0 = Either Error Unit -> Effect Unit -- TODO: better Maybe Error -> Unit?
 type Callback1 a = Either Error a -> Effect Unit
+
+handleCallback0 :: Callback0 -> JSCallback0
+handleCallback0 cb = mkEffectFn1 \err -> case toMaybe err of
+  Nothing -> cb (Right unit)
+  Just err' -> cb (Left err')
 
 handleCallback1 :: forall a. Callback1 a -> JSCallback1 a
 handleCallback1 cb = mkEffectFn2 \err a -> case toMaybe err of

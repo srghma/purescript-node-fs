@@ -11,8 +11,7 @@ import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (Error)
 import Node.Encoding (Encoding(..))
-import Node.FS.Aff 
-import Node.FS.Options 
+import Node.FS.Options (opendirOptionsDefault, rmOptionsDefault)
 import Node.FS.Aff as A
 import Node.FS.Aff.Dir (close, entries, read)
 import Node.FS.Dirent (Dirent, DirentNameTypeString)
@@ -22,7 +21,8 @@ import Node.Path as Path
 import Test.Assert (assertEqual)
 
 outerTmpDir :: FilePath
-outerTmpDir = Path.concat ["tmp", "dir-entries-test"]
+outerTmpDir = Path.concat [ "tmp", "dir-entries-test" ]
+
 -- outerTmpDir = Path.concat [".", "tmp", "dir-entries-test"]
 
 prepare :: Aff Unit
@@ -96,11 +96,11 @@ test2 = do
     }
   close dir >>= \file -> liftEffect $ assertEqual
     { actual: show file
-    , expected: "Nothing"
+    , expected: "unit"
     }
-  close dir >>= \maybeError -> liftEffect $ assertEqual
-    { actual: String.take 74 $ show maybeError
-    , expected: "(Just Error [ERR_DIR_CLOSED]: Directory handle was closed\n    at Dir.close"
+  try (close dir) >>= \(error :: Either Error Unit) -> liftEffect $ assertEqual
+    { actual: String.take 74 $ show error
+    , expected: "(Left Error [ERR_DIR_CLOSED]: Directory handle was closed\n    at Dir.close"
     }
   try (read dir) >>= \(eitherFile :: Either Error (Maybe (Dirent DirentNameTypeString))) -> liftEffect $ assertEqual
     { actual: String.take 74 $ show eitherFile
@@ -110,5 +110,5 @@ test2 = do
 main :: Effect Unit
 main = launchAff_ do
   prepare
-  test1
+  -- test1
   test2

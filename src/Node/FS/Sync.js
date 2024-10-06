@@ -1,7 +1,7 @@
 export {
-  accessSync as accessImpl,
-  copyFileSync as copyFileImpl,
-  mkdtempSync as mkdtempImpl,
+  accessSync as accessSyncImpl,
+  copyFileSync as copyFileSyncImpl,
+  mkdtempSync as mkdtempSyncImpl,
   renameSync as renameSyncImpl,
   truncateSync as truncateSyncImpl,
   chownSync as chownSyncImpl,
