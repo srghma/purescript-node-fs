@@ -14,6 +14,7 @@ module Node.FS.Sync
   , link
   , symlink
   , readlink
+  , readlinkBuffer
   , realpath
   , realpath'
   , unlink
@@ -114,6 +115,10 @@ foreign import lstatSyncImpl :: EffectFn1 FilePath Stats
 foreign import linkSyncImpl :: EffectFn2 FilePath FilePath Unit
 foreign import symlinkSyncImpl :: EffectFn3 FilePath FilePath (Nullable String) Unit
 foreign import readlinkSyncImpl :: EffectFn1 FilePath FilePath
+
+readlinkBufferSyncImpl :: EffectFn2 FilePath String Buffer
+readlinkBufferSyncImpl = unsafeCoerce readlinkSyncImpl
+
 foreign import realpathSyncImpl :: EffectFn2 FilePath RealpathOptionsInternal FilePath
 foreign import unlinkSyncImpl :: EffectFn1 FilePath Unit
 foreign import rmdirSyncImpl :: EffectFn2 FilePath RmdirOptions Unit
@@ -238,6 +243,9 @@ readlink
   :: FilePath
   -> Effect FilePath
 readlink path = runEffectFn1 readlinkSyncImpl path
+
+readlinkBuffer :: FilePath -> Effect Buffer
+readlinkBuffer path = runEffectFn2 readlinkBufferSyncImpl path "buffer"
 
 -- | Find the canonicalized absolute location for a path.
 realpath
@@ -569,12 +577,8 @@ ftruncate fd len = runEffectFn2 ftruncateSyncImpl fd len
 
 -- | Change file timestamps for a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_futimes_fd_atime_mtime_callback)
 -- | for details.
-futimes
-  :: FilePath
-  -> DateTime
-  -> DateTime
-  -> Effect Unit
-futimes file atime mtime = runEffectFn3 lutimesSyncImpl file (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime)
+futimes :: FileDescriptor -> DateTime -> DateTime -> Effect Unit
+futimes fd atime mtime = runEffectFn3 futimesSyncImpl fd (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime)
 
 -- | Perform pattern matching in file paths. See the [Node Documentation](https://nodejs.org/api/glob.html#globglob_pattern_options_callback)
 -- | for details.

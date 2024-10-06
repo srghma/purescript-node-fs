@@ -14,6 +14,7 @@ module Node.FS.Async
   , link
   , symlink
   , readlink
+  , readlinkBuffer
   , realpath
   , realpath'
   , unlink
@@ -114,6 +115,10 @@ foreign import lstatImpl :: EffectFn2 FilePath (JSCallback1 Stats) Unit
 foreign import linkImpl :: EffectFn3 FilePath FilePath JSCallback0 Unit
 foreign import symlinkImpl :: EffectFn4 FilePath FilePath (Nullable String) JSCallback0 Unit
 foreign import readlinkImpl :: EffectFn2 FilePath (JSCallback1 FilePath) Unit
+
+readlinkBufferImpl :: EffectFn3 FilePath String (JSCallback1 Buffer) Unit
+readlinkBufferImpl = unsafeCoerce readlinkImpl
+
 foreign import realpathImpl :: EffectFn3 FilePath RealpathOptionsInternal (JSCallback1 FilePath) Unit
 foreign import unlinkImpl :: EffectFn2 FilePath JSCallback0 Unit
 foreign import rmdirImpl :: EffectFn3 FilePath RmdirOptions JSCallback0 Unit
@@ -253,6 +258,13 @@ readlink
   -> Callback1 FilePath
   -> Effect Unit
 readlink path cb = runEffectFn2 readlinkImpl path (handleCallback1 cb)
+
+-- | Reads the value of a symlink, returns buffer.
+readlinkBuffer
+  :: FilePath
+  -> Callback1 Buffer
+  -> Effect Unit
+readlinkBuffer path cb = runEffectFn3 readlinkBufferImpl path "buffer" (handleCallback1 cb)
 
 -- | Find the canonicalized absolute location for a path.
 realpath
@@ -619,13 +631,8 @@ ftruncate fd len cb = runEffectFn3 ftruncateImpl fd len (handleCallback0 cb)
 
 -- | Change file timestamps for a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_futimes_fd_atime_mtime_callback)
 -- | for details.
-futimes
-  :: FilePath
-  -> DateTime
-  -> DateTime
-  -> Callback0
-  -> Effect Unit
-futimes file atime mtime cb = runEffectFn4 lutimesImpl file (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime) (handleCallback0 cb)
+futimes :: FileDescriptor -> DateTime -> DateTime -> Callback0 -> Effect Unit
+futimes fd atime mtime cb = runEffectFn4 futimesImpl fd (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime) (handleCallback0 cb)
 
 -- | Perform pattern matching in file paths. See the [Node Documentation](https://nodejs.org/api/glob.html#globglob_pattern_options_callback)
 -- | for details.

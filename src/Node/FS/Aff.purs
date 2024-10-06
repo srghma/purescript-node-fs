@@ -14,6 +14,7 @@ module Node.FS.Aff
   , link
   , symlink
   , readlink
+  , readlinkBuffer
   , realpath
   , realpath'
   , unlink
@@ -178,6 +179,9 @@ symlink = toAff3 A.symlink
 -- |
 readlink :: FilePath -> Aff FilePath
 readlink = toAff1 A.readlink
+
+readlinkBuffer :: FilePath -> Aff Buffer
+readlinkBuffer = toAff1 A.readlinkBuffer
 
 -- |
 -- | Find the canonicalized absolute location for a path.
@@ -442,7 +446,7 @@ ftruncate = toAff2 A.ftruncate
 
 -- | Change file timestamps for a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_futimes_fd_atime_mtime_callback)
 -- | for details.
-futimes :: FilePath -> DateTime -> DateTime -> Aff Unit
+futimes :: FileDescriptor -> DateTime -> DateTime -> Aff Unit
 futimes = toAff3 A.futimes
 
 -- | Perform pattern matching in file paths. See the [Node Documentation](https://nodejs.org/api/glob.html#globglob_pattern_options_callback)
