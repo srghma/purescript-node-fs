@@ -12,6 +12,7 @@
             "either",
             "enums",
             "exceptions",
+            "foreign",
             "functions",
             "integers",
             "js-date",
