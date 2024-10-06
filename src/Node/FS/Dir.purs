@@ -2,12 +2,10 @@ module Node.FS.Dir where
 
 import Prelude
 
-import Data.Either (Either)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)
 import Effect (Effect)
-import Effect.Exception (Error)
-import Effect.Uncurried (EffectFn1, EffectFn2, mkEffectFn1, runEffectFn1, runEffectFn2)
+import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, runEffectFn2)
 import Node.FS.Dirent (Dirent, DirentNameTypeString)
 import Node.FS.Internal.Utils (Callback0, JSCallback0, JSCallback1, Callback1, handleCallback0, handleCallback1)
 import Node.Path (FilePath)

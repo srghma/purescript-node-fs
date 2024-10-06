@@ -81,18 +81,15 @@ module Node.FS.Sync
   , writev
   ) where
 
-import Node.FS.Constants
-import Node.FS.Options
-import Node.FS.Types
+import Node.FS.Constants (AccessMode, CopyMode, FileFlags, defaultAccessMode, defaultCopyMode, fileFlagsToNode)
+import Node.FS.Options (AppendFileBufferOptions, AppendFileOptionsInternal, AppendFileStringOptions, CpOptions, CpOptionsInternal, FdReadOptions, FdReadOptionsInternal, FdWriteOptions, FdWriteOptionsInternal, GlobDirentOptions, GlobFilePathOptions, GlobOptionsInternal, MkdirOptions, MkdirOptionsInternal, OpendirOptions, OpendirOptionsInternal, ReadFileBufferOptions, ReadFileOptionsInternal, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, ReaddirOptionsInternal, RealpathOptions, RealpathOptionsInternal, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileOptionsInternal, WriteFileStringOptions, appendFileBufferOptionsDefault, appendFileBufferOptionsToInternal, appendFileStringOptionsDefault, appendFileStringOptionsToInternal, cpOptionsDefault, cpOptionsToCpOptionsInternal, fdReadOptionsToInternal, fdWriteOptionsToInternal, globDirentOptionsDefault, globDirentOptionsToInternal, globFilePathOptionsDefault, globFilePathOptionsToInternal, mkdirOptionsDefault, mkdirOptionsToInternal, opendirOptionsDefault, opendirOptionsToInternal, readFileBufferOptionsDefault, readFileBufferOptionsToInternal, readFileStringOptionsDefault, readFileStringOptionsToInternal, readdirBufferOptionsDefault, readdirBufferOptionsToInternal, readdirDirentBufferOptionsDefault, readdirDirentBufferOptionsToInternal, readdirDirentOptionsDefault, readdirDirentOptionsToInternal, readdirFilePathOptionsDefault, readdirFilePathOptionsToInternal, realpathOptionsDefault, realpathOptionsToInternal, rmOptionsDefault, rmdirOptionsDefault, writeFileBufferOptionsDefault, writeFileBufferOptionsToInternal, writeFileStringOptionsDefault, writeFileStringOptionsToInternal)
+import Node.FS.Types (BufferLength, BufferOffset, ByteCount, FileDescriptor, FileMode, FilePosition, SymlinkType, symlinkTypeToNode)
 import Prelude
 
 import Data.DateTime (DateTime)
-import Data.DateTime.Instant (fromDateTime, unInstant)
 import Data.Either (blush)
-import Data.Int (round)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, toNullable)
-import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Effect.Exception (Error, try)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, EffectFn5, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4, runEffectFn5)
@@ -101,7 +98,7 @@ import Node.Encoding (Encoding(..), encodingToNode)
 import Node.FS.Dir (Dir)
 import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
 import Node.FS.Internal.Utils (datetimeToUnixEpochTimeInSeconds)
-import Node.FS.Perms (Perms, permsToString, all, mkPerms)
+import Node.FS.Perms (Perms, permsToString)
 import Node.FS.Stats (Stats)
 import Node.Path (FilePath)
 import Prim.TypeError (class Warn, Text)
