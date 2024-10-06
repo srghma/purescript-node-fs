@@ -1,4 +1,4 @@
-module Test where
+module Test.Node.FS.Sync where
 
 import Prelude
 
@@ -35,10 +35,10 @@ main :: Effect Unit
 main = do
   let fp = Path.concat
 
-  e <- S.exists (fp [ "test", "Test.purs" ])
+  e <- S.exists (fp [ "test", "Test", "Node", "FS", "Sync.purs" ])
   log $ "Test.purs exists? " <> show e
 
-  file <- S.readTextFile UTF8 (fp [ "test", "Test.purs" ])
+  file <- S.readTextFile UTF8 (fp [ "test", "Test", "Node", "FS", "Sync.purs" ])
   log "\n\nreadTextFile sync result:"
   log $ file
 
@@ -99,16 +99,16 @@ main = do
       log "\n\ntruncate result:"
       either (log <<< show) (log <<< show) y
 
-  A.readFile (fp [ "test", "Test.purs" ]) $ \mbuf -> do
+  A.readFile (fp [ "test", "Test", "Node", "FS", "Sync.purs" ]) $ \mbuf -> do
     buf <- traverse Buffer.freeze mbuf
     log "\n\nreadFile result:"
     either (log <<< show) (log <<< show) buf
 
-  A.readTextFile UTF8 (fp [ "test", "Test.purs" ]) $ \x -> do
+  A.readTextFile UTF8 (fp [ "test", "Test", "Node", "FS", "Sync.purs" ]) $ \x -> do
     log "\n\nreadTextFile result:"
     either (log <<< show) log x
 
-  A.stat (fp [ "test", "Test.purs" ]) $ \x -> do
+  A.stat (fp [ "test", "Test", "Node", "FS", "Sync.purs" ]) $ \x -> do
     log "\n\nA.stat:"
     case x of
       Left err -> log $ "Error:" <> show err
@@ -197,4 +197,3 @@ main = do
   case copyErr of
     Left _ -> pure unit
     Right _ -> throw $ destReadPath <> " already exists, but copying a file to there did not throw an error with COPYFILE_EXCL option"
-

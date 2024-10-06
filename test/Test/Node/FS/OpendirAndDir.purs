@@ -1,4 +1,4 @@
-module TestDirEntries where
+module Test.Node.FS.OpendirAndDir where
 
 import Prelude
 
@@ -21,7 +21,8 @@ import Node.Path as Path
 import Test.Assert (assertEqual)
 
 outerTmpDir :: FilePath
-outerTmpDir = "./tmp/dir-entries-test"
+outerTmpDir = Path.concat ["tmp", "dir-entries-test"]
+-- outerTmpDir = Path.concat [".", "tmp", "dir-entries-test"]
 
 prepare :: Aff Unit
 prepare = do
@@ -42,18 +43,18 @@ test1 = do
     , expected:
         """[Dirent Dirent {
   name: 'dir1',
-  parentPath: './tmp/dir-entries-test',
-  path: './tmp/dir-entries-test',
+  parentPath: 'tmp/dir-entries-test',
+  path: 'tmp/dir-entries-test',
   [Symbol(type)]: 2
 },Dirent Dirent {
   name: '1.txt',
-  parentPath: './tmp/dir-entries-test',
-  path: './tmp/dir-entries-test',
+  parentPath: 'tmp/dir-entries-test',
+  path: 'tmp/dir-entries-test',
   [Symbol(type)]: 1
 },Dirent Dirent {
   name: '2.txt',
-  parentPath: './tmp/dir-entries-test',
-  path: './tmp/dir-entries-test',
+  parentPath: 'tmp/dir-entries-test',
+  path: 'tmp/dir-entries-test',
   [Symbol(type)]: 1
 },Dirent Dirent {
   name: '3.txt',
@@ -78,15 +79,15 @@ test2 = do
   dir <- A.opendir' outerTmpDir (opendirOptionsDefault { recursive = false })
   read dir >>= \file -> liftEffect $ assertEqual
     { actual: show file
-    , expected: "(Just Dirent Dirent {\n  name: 'dir1',\n  parentPath: './tmp/dir-entries-test',\n  path: './tmp/dir-entries-test',\n  [Symbol(type)]: 2\n})"
+    , expected: "(Just Dirent Dirent {\n  name: 'dir1',\n  parentPath: 'tmp/dir-entries-test',\n  path: 'tmp/dir-entries-test',\n  [Symbol(type)]: 2\n})"
     }
   read dir >>= \file -> liftEffect $ assertEqual
     { actual: show file
-    , expected: "(Just Dirent Dirent {\n  name: '1.txt',\n  parentPath: './tmp/dir-entries-test',\n  path: './tmp/dir-entries-test',\n  [Symbol(type)]: 1\n})"
+    , expected: "(Just Dirent Dirent {\n  name: '1.txt',\n  parentPath: 'tmp/dir-entries-test',\n  path: 'tmp/dir-entries-test',\n  [Symbol(type)]: 1\n})"
     }
   read dir >>= \file -> liftEffect $ assertEqual
     { actual: show file
-    , expected: "(Just Dirent Dirent {\n  name: '2.txt',\n  parentPath: './tmp/dir-entries-test',\n  path: './tmp/dir-entries-test',\n  [Symbol(type)]: 1\n})"
+    , expected: "(Just Dirent Dirent {\n  name: '2.txt',\n  parentPath: 'tmp/dir-entries-test',\n  path: 'tmp/dir-entries-test',\n  [Symbol(type)]: 1\n})"
     }
   read dir >>= \file -> liftEffect $ assertEqual
     { actual: show file
