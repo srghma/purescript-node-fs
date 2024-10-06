@@ -1,6 +1,5 @@
 module Node.FS.Async
-  ( Callback
-  , access
+  ( access
   , access'
   , copyFile
   , copyFile'
@@ -20,12 +19,8 @@ module Node.FS.Async
   , unlink
   , rmdir
   , rmdir'
-  , rmdirOptionsDefault
-  , RmdirOptions
   , rm
   , rm'
-  , rmOptionsDefault
-  , RmOptions
   , mkdir
   , mkdir'
   , readdir
@@ -45,15 +40,15 @@ module Node.FS.Async
   , appendTextFile
   , fdOpen
   , fdRead
+  , fdRead'
   , fdNext
   , fdWrite
+  , fdWrite'
+  , fdWriteString
   , fdAppend
   , fdClose
   , cp
   , cp'
-  , cpOptionsDefault
-  , CpOptions
-  , CpForce(..)
   , fchmod
   , fchown
   , fdatasync
@@ -71,8 +66,6 @@ module Node.FS.Async
   -- , openAsBlob
   , opendir
   , opendir'
-  , OpendirOptions
-  , opendirOptionsDefault
   , readv
   , statfs
   -- , unwatchFile
@@ -84,227 +77,206 @@ module Node.FS.Async
 import Prelude
 
 import Data.DateTime (DateTime)
-import Data.DateTime.Instant (fromDateTime, unInstant)
-import Data.Either (Either(..))
-import Data.Function.Uncurried (Fn2, mkFn2)
-import Data.Int (round)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, toMaybe, toNullable)
-import Data.Time.Duration (Milliseconds(..))
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple)
 import Effect (Effect)
 import Effect.Exception (Error)
-import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, EffectFn6, mkEffectFn1, mkEffectFn2, mkEffectFn3, runEffectFn2, runEffectFn3, runEffectFn4, runEffectFn6)
+import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, EffectFn5, EffectFn6, mkEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4, runEffectFn5, runEffectFn6)
 import Node.Buffer (Buffer, size)
 import Node.Encoding (Encoding(..), encodingToNode)
 import Node.FS (FileDescriptor, ByteCount, FilePosition, BufferLength, BufferOffset, FileMode, SymlinkType, symlinkTypeToNode)
-import Node.FS.Constants (FileFlags, fileFlagsToNode, AccessMode, CopyMode, defaultAccessMode, defaultCopyMode)
+import Node.FS.Constants
+import Node.FS.Internal.Utils 
+import Node.FS.Options
 import Node.FS.Dir (Dir)
 import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
-import Node.FS.Perms (Perms, permsToString, all, mkPerms)
+import Node.FS.Perms (Perms, permsToString)
 import Node.FS.Stats (Stats)
 import Node.Path (FilePath)
-
-datetimeToUnixEpochTimeInSeconds :: DateTime -> Int
-datetimeToUnixEpochTimeInSeconds date = ms (toEpochMilliseconds date) / 1000
-  where
-  ms (Milliseconds n) = round n
-  toEpochMilliseconds = unInstant <<< fromDateTime
-
-type JSCallback a = EffectFn2 (Nullable Error) a Unit
-
-type JSCallback2 a b = EffectFn3 (Nullable Error) a b Unit
-
-handleCallback :: forall a. Callback a -> JSCallback a
-handleCallback cb = mkEffectFn2 \err a -> case toMaybe err of
-  Nothing -> cb (Right a)
-  Just err' -> cb (Left err')
-
-handleCallback2 :: forall a b. Callback (Tuple a b) -> JSCallback2 a b
-handleCallback2 cb = mkEffectFn3 \err a b -> case toMaybe err of
-  Nothing -> cb (Right (Tuple a b))
-  Just err' -> cb (Left err')
-
--- | Type synonym for callback functions.
-type Callback a = Either Error a -> Effect Unit
-
-access :: FilePath -> (Maybe Error -> Effect Unit) -> Effect Unit
-access path = access' path defaultAccessMode
-
-access' :: FilePath -> AccessMode -> (Maybe Error -> Effect Unit) -> Effect Unit
-access' path mode cb = runEffectFn3 accessImpl path mode $ mkEffectFn1 \err -> do
-  cb $ toMaybe err
+import Unsafe.Coerce (unsafeCoerce)
 
 foreign import accessImpl :: EffectFn3 FilePath AccessMode (EffectFn1 (Nullable Error) Unit) Unit
-
-copyFile :: FilePath -> FilePath -> Callback Unit -> Effect Unit
-copyFile src dest = copyFile' src dest defaultCopyMode
-
-copyFile' :: FilePath -> FilePath -> CopyMode -> Callback Unit -> Effect Unit
-copyFile' src dest mode cb = runEffectFn4 copyFileImpl src dest mode (handleCallback cb)
-
-foreign import copyFileImpl :: EffectFn4 FilePath FilePath CopyMode (JSCallback Unit) Unit
-
-mkdtemp :: FilePath -> Callback FilePath -> Effect Unit
-mkdtemp prefix = mkdtemp' prefix UTF8
-
-mkdtemp' :: FilePath -> Encoding -> Callback FilePath -> Effect Unit
-mkdtemp' prefix encoding cb = runEffectFn3 mkdtempImpl prefix (encodingToNode encoding) (handleCallback cb)
-
-foreign import mkdtempImpl :: EffectFn3 FilePath FilePath (JSCallback FilePath) Unit
-
-foreign import renameImpl :: EffectFn3 FilePath FilePath (JSCallback Unit) Unit
-foreign import truncateImpl :: EffectFn3 FilePath Int (JSCallback Unit) Unit
-foreign import chownImpl :: EffectFn4 FilePath Int Int (JSCallback Unit) Unit
-foreign import chmodImpl :: EffectFn3 FilePath String (JSCallback Unit) Unit
-foreign import statImpl :: EffectFn2 FilePath (JSCallback Stats) Unit
-foreign import lstatImpl :: EffectFn2 FilePath (JSCallback Stats) Unit
-foreign import linkImpl :: EffectFn3 FilePath FilePath (JSCallback Unit) Unit
-foreign import symlinkImpl :: EffectFn4 FilePath FilePath (Nullable String) (JSCallback Unit) Unit
-foreign import readlinkImpl :: EffectFn2 FilePath (JSCallback FilePath) Unit
-foreign import realpathImpl :: forall cache. EffectFn3 FilePath { | cache } (JSCallback FilePath) Unit
-foreign import unlinkImpl :: EffectFn2 FilePath (JSCallback Unit) Unit
-foreign import rmdirImpl :: EffectFn3 FilePath RmdirOptions (JSCallback Unit) Unit
-foreign import rmImpl :: EffectFn3 FilePath RmOptions (JSCallback Unit) Unit
-foreign import mkdirImpl :: EffectFn3 FilePath { recursive :: Boolean, mode :: String } (JSCallback Unit) Unit
+foreign import copyFileImpl :: EffectFn4 FilePath FilePath CopyMode (JSCallback1 Unit) Unit
+foreign import mkdtempImpl :: EffectFn3 FilePath FilePath (JSCallback1 FilePath) Unit
+foreign import renameImpl :: EffectFn3 FilePath FilePath (JSCallback1 Unit) Unit
+foreign import truncateImpl :: EffectFn3 FilePath Int (JSCallback1 Unit) Unit
+foreign import chownImpl :: EffectFn4 FilePath Int Int (JSCallback1 Unit) Unit
+foreign import chmodImpl :: EffectFn3 FilePath String (JSCallback1 Unit) Unit
+foreign import statImpl :: EffectFn2 FilePath (JSCallback1 Stats) Unit
+foreign import lstatImpl :: EffectFn2 FilePath (JSCallback1 Stats) Unit
+foreign import linkImpl :: EffectFn3 FilePath FilePath (JSCallback1 Unit) Unit
+foreign import symlinkImpl :: EffectFn4 FilePath FilePath (Nullable String) (JSCallback1 Unit) Unit
+foreign import readlinkImpl :: EffectFn2 FilePath (JSCallback1 FilePath) Unit
+foreign import realpathImpl :: EffectFn3 FilePath RealpathOptionsInternal (JSCallback1 FilePath) Unit
+foreign import unlinkImpl :: EffectFn2 FilePath (JSCallback1 Unit) Unit
+foreign import rmdirImpl :: EffectFn3 FilePath RmdirOptions (JSCallback1 Unit) Unit
+foreign import rmImpl :: EffectFn3 FilePath RmOptions (JSCallback1 Unit) Unit
+foreign import mkdirImpl :: EffectFn3 FilePath MkdirOptionsInternal (JSCallback1 Unit) Unit
 -- if { withFileTypes: false, recursive: false } => ['Tidy']
 -- if { withFileTypes: false, recursive: true } => [ 'Tidy', 'Tidy/Codegen', 'Tidy/Codegen.purs', 'Tidy/Codegen/Class.purs', .. ]
-foreign import readdirImpl :: forall filepathOrDirentOrBuffer stringOrBuffer. EffectFn3 FilePath { encoding :: stringOrBuffer, recursive :: Boolean, withFileTypes :: Boolean } (JSCallback (Array filepathOrDirentOrBuffer)) Unit
-foreign import utimesImpl :: EffectFn4 FilePath Int Int (JSCallback Unit) Unit
-foreign import readFileImpl :: forall a opts. EffectFn3 FilePath { | opts } (JSCallback a) Unit
-foreign import writeFileImpl :: forall a opts. EffectFn4 FilePath a { | opts } (JSCallback Unit) Unit
-foreign import appendFileImpl :: forall a opts. EffectFn4 FilePath a { | opts } (JSCallback Unit) Unit
-foreign import openImpl :: EffectFn4 FilePath String (Nullable FileMode) (JSCallback FileDescriptor) Unit
-foreign import readImpl :: EffectFn6 FileDescriptor Buffer BufferOffset BufferLength (Nullable FilePosition) (JSCallback ByteCount) Unit
-foreign import writeImpl :: EffectFn6 FileDescriptor Buffer BufferOffset BufferLength (Nullable FilePosition) (JSCallback ByteCount) Unit
-foreign import closeImpl :: EffectFn2 FileDescriptor (JSCallback Unit) Unit
-foreign import cpImpl :: EffectFn4 FilePath FilePath CpOptionsInternal (JSCallback Unit) Unit
-foreign import fchmodImpl :: EffectFn3 FileDescriptor String (JSCallback Unit) Unit
-foreign import fchownImpl :: EffectFn4 FileDescriptor Int Int (JSCallback Unit) Unit
-foreign import fdatasyncImpl :: EffectFn2 FileDescriptor (JSCallback Unit) Unit
-foreign import fstatImpl :: EffectFn2 FileDescriptor (JSCallback Stats) Unit
-foreign import fsyncImpl :: EffectFn2 FileDescriptor (JSCallback Unit) Unit
-foreign import ftruncateImpl :: EffectFn3 FileDescriptor Int (JSCallback Unit) Unit
-foreign import futimesImpl :: EffectFn4 FileDescriptor Int Int (JSCallback Unit) Unit
-foreign import globImpl :: forall filepathOrDirent. EffectFn3 (Array FilePath) { cwd :: Nullable FilePath, exclude :: Nullable (filepathOrDirent -> Boolean), withFileTypes :: Boolean } (JSCallback (Array filepathOrDirent)) Unit
-foreign import lchmodImpl :: EffectFn3 FilePath String (JSCallback Unit) Unit
-foreign import lchownImpl :: EffectFn4 FilePath Int Int (JSCallback Unit) Unit
-foreign import lutimesImpl :: EffectFn4 FilePath Int Int (JSCallback Unit) Unit
+foreign import readdirImpl :: forall filepathOrDirentOrBuffer . EffectFn3 FilePath ReaddirOptionsInternal (JSCallback1 (Array filepathOrDirentOrBuffer)) Unit
+foreign import utimesImpl :: EffectFn4 FilePath Int Int (JSCallback1 Unit) Unit
+foreign import readFileImpl :: forall stringOrBuffer . EffectFn3 FilePath ReadFileOptionsInternal (JSCallback1 stringOrBuffer) Unit
+foreign import writeFileImpl :: forall stringOrBuffer . EffectFn4 FilePath stringOrBuffer WriteFileOptionsInternal (JSCallback1 Unit) Unit
+foreign import appendFileImpl :: forall stringOrBuffer . EffectFn4 FilePath stringOrBuffer AppendFileOptionsInternal (JSCallback1 Unit) Unit
+foreign import openImpl :: EffectFn4 FilePath String (Nullable FileMode) (JSCallback1 FileDescriptor) Unit
+foreign import readImpl :: EffectFn6 FileDescriptor Buffer BufferOffset BufferLength (Nullable FilePosition) (JSCallback1 ByteCount) Unit
+
+-- https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback
+readWithOptionsImpl :: EffectFn3 FileDescriptor FdReadOptionsInternal (JSCallback2 ByteCount Buffer) Unit
+readWithOptionsImpl = unsafeCoerce readImpl
+
+foreign import writeImpl :: EffectFn6 FileDescriptor Buffer BufferOffset BufferLength (Nullable FilePosition) (JSCallback1 ByteCount) Unit
+
+-- https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback
+writeWithOptionsImpl :: EffectFn3 FileDescriptor FdWriteOptionsInternal (JSCallback2 ByteCount Buffer) Unit
+writeWithOptionsImpl = unsafeCoerce writeImpl
+
+-- https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback
+writeStringImpl :: EffectFn5 FileDescriptor String (Nullable FilePosition) String (JSCallback2 ByteCount String) Unit
+writeStringImpl = unsafeCoerce writeImpl
+
+foreign import closeImpl :: EffectFn2 FileDescriptor (JSCallback1 Unit) Unit
+foreign import cpImpl :: EffectFn4 FilePath FilePath CpOptionsInternal (JSCallback1 Unit) Unit
+foreign import fchmodImpl :: EffectFn3 FileDescriptor String (JSCallback1 Unit) Unit
+foreign import fchownImpl :: EffectFn4 FileDescriptor Int Int (JSCallback1 Unit) Unit
+foreign import fdatasyncImpl :: EffectFn2 FileDescriptor (JSCallback1 Unit) Unit
+foreign import fstatImpl :: EffectFn2 FileDescriptor (JSCallback1 Stats) Unit
+foreign import fsyncImpl :: EffectFn2 FileDescriptor (JSCallback1 Unit) Unit
+foreign import ftruncateImpl :: EffectFn3 FileDescriptor Int (JSCallback1 Unit) Unit
+foreign import futimesImpl :: EffectFn4 FileDescriptor Int Int (JSCallback1 Unit) Unit
+foreign import globImpl :: forall filepathOrDirent. EffectFn3 (Array FilePath) (GlobOptionsInternal filepathOrDirent) (JSCallback1 (Array filepathOrDirent)) Unit
+foreign import lchmodImpl :: EffectFn3 FilePath String (JSCallback1 Unit) Unit
+foreign import lchownImpl :: EffectFn4 FilePath Int Int (JSCallback1 Unit) Unit
+foreign import lutimesImpl :: EffectFn4 FilePath Int Int (JSCallback1 Unit) Unit
 -- foreign import openAsBlobImpl :: EffectFn2 FilePath (Promise Blob) Unit
-foreign import opendirImpl :: EffectFn3 FilePath { bufferSize :: Int, recursive :: Boolean, encoding :: String } (JSCallback Dir) Unit
+foreign import opendirImpl :: EffectFn3 FilePath OpendirOptionsInternal (JSCallback1 Dir) Unit
 foreign import readvImpl :: EffectFn4 FileDescriptor (Array Buffer) (Nullable FilePosition) (JSCallback2 ByteCount (Array Buffer)) Unit
-foreign import statfsImpl :: EffectFn2 FilePath (JSCallback Stats) Unit
+foreign import statfsImpl :: EffectFn2 FilePath (JSCallback1 Stats) Unit
 -- foreign import unwatchFileImpl :: EffectFn1 FilePath Unit
 -- foreign import watchImpl :: EffectFn2 FilePath (EffectFn1 String Unit) Unit
 -- foreign import watchFileImpl :: EffectFn2 FilePath (EffectFn2 Stats Stats Unit) Unit
 foreign import writevImpl :: EffectFn4 FileDescriptor (Array Buffer) (Nullable FilePosition) (JSCallback2 ByteCount (Array Buffer)) Unit
 
+access :: FilePath -> (Maybe Error -> Effect Unit) -> Effect Unit
+access path = access' path defaultAccessMode
+
+access' :: FilePath -> AccessMode -> (Maybe Error -> Effect Unit) -> Effect Unit
+access' path mode cb = runEffectFn3 accessImpl path mode $ mkEffectFn1 (cb <<< toMaybe)
+
+copyFile :: FilePath -> FilePath -> Callback1 Unit -> Effect Unit
+copyFile src dest = copyFile' src dest defaultCopyMode
+
+copyFile' :: FilePath -> FilePath -> CopyMode -> Callback1 Unit -> Effect Unit
+copyFile' src dest mode cb = runEffectFn4 copyFileImpl src dest mode (handleCallback1 cb)
+
+mkdtemp :: FilePath -> Callback1 FilePath -> Effect Unit
+mkdtemp prefix = mkdtemp' prefix UTF8
+
+mkdtemp' :: FilePath -> Encoding -> Callback1 FilePath -> Effect Unit
+mkdtemp' prefix encoding cb = runEffectFn3 mkdtempImpl prefix (encodingToNode encoding) (handleCallback1 cb)
+
 -- | Renames a file.
 rename
   :: FilePath
   -> FilePath
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-rename oldFile newFile cb = runEffectFn3 renameImpl oldFile newFile (handleCallback cb)
+rename oldFile newFile cb = runEffectFn3 renameImpl oldFile newFile (handleCallback1 cb)
 
 -- | Truncates a file to the specified length.
 truncate
   :: FilePath
   -> Int
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-truncate file len cb = runEffectFn3 truncateImpl file len (handleCallback cb)
+truncate file len cb = runEffectFn3 truncateImpl file len (handleCallback1 cb)
 
 -- | Changes the ownership of a file.
 chown
   :: FilePath
   -> Int
   -> Int
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-chown file uid gid cb = runEffectFn4 chownImpl file uid gid (handleCallback cb)
+chown file uid gid cb = runEffectFn4 chownImpl file uid gid (handleCallback1 cb)
 
 -- | Changes the permissions of a file.
 chmod
   :: FilePath
   -> Perms
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-chmod file perms cb = runEffectFn3 chmodImpl file (permsToString perms) (handleCallback cb)
+chmod file perms cb = runEffectFn3 chmodImpl file (permsToString perms) (handleCallback1 cb)
 
 -- | Gets file statistics.
 stat
   :: FilePath
-  -> Callback Stats
+  -> Callback1 Stats
   -> Effect Unit
-stat file cb = runEffectFn2 statImpl file (handleCallback $ cb)
+stat file cb = runEffectFn2 statImpl file (handleCallback1 $ cb)
 
 -- | Gets file or symlink statistics. `lstat` is identical to `stat`, except
 -- | that if the `FilePath` is a symbolic link, then the link itself is stat-ed,
 -- | not the file that it refers to.
 lstat
   :: FilePath
-  -> Callback Stats
+  -> Callback1 Stats
   -> Effect Unit
-lstat file cb = runEffectFn2 lstatImpl file (handleCallback $ cb)
+lstat file cb = runEffectFn2 lstatImpl file (handleCallback1 $ cb)
 
 -- | Creates a link to an existing file.
 link
   :: FilePath
   -> FilePath
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-link src dst cb = runEffectFn3 linkImpl src dst (handleCallback cb)
+link src dst cb = runEffectFn3 linkImpl src dst (handleCallback1 cb)
 
 -- | Creates a symlink.
 symlink
   :: FilePath
   -> FilePath
   -> SymlinkType
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-symlink src dest ty cb = runEffectFn4 symlinkImpl src dest (symlinkTypeToNode ty) (handleCallback cb)
+symlink src dest ty cb = runEffectFn4 symlinkImpl src dest (symlinkTypeToNode ty) (handleCallback1 cb)
 
 -- | Reads the value of a symlink.
 readlink
   :: FilePath
-  -> Callback FilePath
+  -> Callback1 FilePath
   -> Effect Unit
-readlink path cb = runEffectFn2 readlinkImpl path (handleCallback cb)
+readlink path cb = runEffectFn2 readlinkImpl path (handleCallback1 cb)
 
 -- | Find the canonicalized absolute location for a path.
 realpath
   :: FilePath
-  -> Callback FilePath
+  -> Callback1 FilePath
   -> Effect Unit
-realpath path cb = runEffectFn3 realpathImpl path {} (handleCallback cb)
+realpath path = realpath' path realpathOptionsDefault
 
 -- | Find the canonicalized absolute location for a path using a cache object
 -- | for already resolved paths.
 realpath'
-  :: forall cache
-   . FilePath
-  -> { | cache }
-  -> Callback FilePath
+  :: FilePath
+  -> RealpathOptions
+  -> Callback1 FilePath
   -> Effect Unit
-realpath' path cache cb = runEffectFn3 realpathImpl path cache (handleCallback cb)
+realpath' path options cb = runEffectFn3 realpathImpl path (realpathOptionsToInternal options) (handleCallback1 cb)
 
 -- | Deletes a file.
 unlink
   :: FilePath
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-unlink file cb = runEffectFn2 unlinkImpl file (handleCallback cb)
-
-type RmdirOptions = { maxRetries :: Int, retryDelay :: Int }
-
-rmdirOptionsDefault :: RmdirOptions
-rmdirOptionsDefault = { maxRetries: 0, retryDelay: 100 }
+unlink file cb = runEffectFn2 unlinkImpl file (handleCallback1 cb)
 
 -- | Deletes a directory.
 rmdir
   :: FilePath
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
 rmdir path cb = rmdir' path rmdirOptionsDefault cb
 
@@ -312,19 +284,14 @@ rmdir path cb = rmdir' path rmdirOptionsDefault cb
 rmdir'
   :: FilePath
   -> RmdirOptions
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-rmdir' path opts cb = runEffectFn3 rmdirImpl path opts (handleCallback cb)
-
-type RmOptions = { force :: Boolean, maxRetries :: Int, recursive :: Boolean, retryDelay :: Int }
-
-rmOptionsDefault :: RmOptions
-rmOptionsDefault = { force: false, maxRetries: 100, recursive: false, retryDelay: 1000 }
+rmdir' path opts cb = runEffectFn3 rmdirImpl path opts (handleCallback1 cb)
 
 -- | Deletes a file or directory.
 rm
   :: FilePath
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
 rm path = rm' path rmOptionsDefault
 
@@ -332,152 +299,198 @@ rm path = rm' path rmOptionsDefault
 rm'
   :: FilePath
   -> RmOptions
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-rm' path opts cb = runEffectFn3 rmImpl path opts (handleCallback cb)
+rm' path opts cb = runEffectFn3 rmImpl path opts (handleCallback1 cb)
 
 -- | Makes a new directory.
 mkdir
   :: FilePath
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-mkdir path = mkdir' path { recursive: false, mode: mkPerms all all all }
+mkdir path = mkdir' path mkdirOptionsDefault
 
 -- | Makes a new directory with the specified permissions.
 mkdir'
   :: FilePath
-  -> { recursive :: Boolean, mode :: Perms }
-  -> Callback Unit
+  -> MkdirOptions
+  -> Callback1 Unit
   -> Effect Unit
-mkdir' file { recursive, mode: perms } cb = runEffectFn3 mkdirImpl file { recursive, mode: permsToString perms } (handleCallback cb)
+mkdir' file opts cb = runEffectFn3 mkdirImpl file (mkdirOptionsToInternal opts) (handleCallback1 cb)
 
 -- | Reads the contents of a directory.
 readdir
   :: FilePath
-  -> Callback (Array FilePath)
+  -> Callback1 (Array FilePath)
   -> Effect Unit
-readdir file = readdir' file { recursive: false, encoding: UTF8 }
+readdir file = readdir' file readdirFilePathOptionsDefault
 
 -- | Reads the contents of a directory.
 readdir'
   :: FilePath
-  -> { recursive :: Boolean, encoding :: Encoding }
-  -> Callback (Array FilePath)
+  -> ReaddirFilePathOptions
+  -> Callback1 (Array FilePath)
   -> Effect Unit
-readdir' file { recursive, encoding } cb = runEffectFn3 readdirImpl file { recursive, encoding: encodingToNode encoding, withFileTypes: false } (handleCallback cb)
+readdir' file options cb = runEffectFn3 readdirImpl file (readdirFilePathOptionsToInternal options) (handleCallback1 cb)
 
 -- | Reads the contents of a directory.
 readdirBuffer
   :: FilePath
-  -> Callback (Array Buffer)
+  -> Callback1 (Array Buffer)
   -> Effect Unit
-readdirBuffer file = readdirBuffer' file { recursive: false }
+readdirBuffer file = readdirBuffer' file readdirBufferOptionsDefault
 
 -- | Reads the contents of a directory.
 readdirBuffer'
   :: FilePath
-  -> { recursive :: Boolean }
-  -> Callback (Array Buffer)
+  -> ReaddirBufferOptions
+  -> Callback1 (Array Buffer)
   -> Effect Unit
-readdirBuffer' file { recursive } cb = runEffectFn3 readdirImpl file { recursive, encoding: "buffer", withFileTypes: false } (handleCallback cb)
+readdirBuffer' file options cb = runEffectFn3 readdirImpl file (readdirBufferOptionsToInternal options) (handleCallback1 cb)
 
 -- | Reads the contents of a directory.
 readdirDirent
   :: FilePath
-  -> Callback (Array (Dirent DirentNameTypeString))
+  -> Callback1 (Array (Dirent DirentNameTypeString))
   -> Effect Unit
-readdirDirent file = readdirDirent' file { recursive: false, encoding: UTF8 }
+readdirDirent file = readdirDirent' file readdirDirentOptionsDefault
 
 -- | Reads the contents of a directory.
 readdirDirent'
   :: FilePath
-  -> { recursive :: Boolean, encoding :: Encoding }
-  -> Callback (Array (Dirent DirentNameTypeString))
+  -> ReaddirDirentOptions
+  -> Callback1 (Array (Dirent DirentNameTypeString))
   -> Effect Unit
-readdirDirent' file { recursive, encoding } cb = runEffectFn3 readdirImpl file { recursive, encoding: encodingToNode encoding, withFileTypes: true } (handleCallback cb)
+readdirDirent' file options cb = runEffectFn3 readdirImpl file (readdirDirentOptionsToInternal options) (handleCallback1 cb)
 
 -- | Reads the contents of a directory.
 readdirDirentBuffer
   :: FilePath
-  -> Callback (Array (Dirent DirentNameTypeBuffer))
+  -> Callback1 (Array (Dirent DirentNameTypeBuffer))
   -> Effect Unit
-readdirDirentBuffer file = readdirDirentBuffer' file { recursive: false }
+readdirDirentBuffer file = readdirDirentBuffer' file readdirDirentBufferOptionsDefault
 
 -- | Reads the contents of a directory.
 readdirDirentBuffer'
   :: FilePath
-  -> { recursive :: Boolean }
-  -> Callback (Array (Dirent DirentNameTypeBuffer))
+  -> ReaddirDirentBufferOptions
+  -> Callback1 (Array (Dirent DirentNameTypeBuffer))
   -> Effect Unit
-readdirDirentBuffer' file { recursive } cb = runEffectFn3 readdirImpl file { recursive, encoding: "buffer", withFileTypes: true } (handleCallback cb)
+readdirDirentBuffer' file options cb = runEffectFn3 readdirImpl file (readdirDirentBufferOptionsToInternal options) (handleCallback1 cb)
 
 -- | Sets the accessed and modified times for the specified file.
 utimes
   :: FilePath
   -> DateTime
   -> DateTime
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-utimes file atime mtime cb = runEffectFn4 utimesImpl file (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime) (handleCallback cb)
-
--- | Reads the entire contents of a file returning the result as a raw buffer.
-readFile
-  :: FilePath
-  -> Callback Buffer
-  -> Effect Unit
-readFile file cb = runEffectFn3 readFileImpl file {} (handleCallback cb)
+utimes file atime mtime cb = runEffectFn4 utimesImpl file (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime) (handleCallback1 cb)
 
 -- | Reads the entire contents of a text file with the specified encoding.
 readTextFile
   :: Encoding
   -> FilePath
-  -> Callback String
+  -> Callback1 String
   -> Effect Unit
-readTextFile encoding file cb = runEffectFn3 readFileImpl file { encoding: show encoding } (handleCallback cb)
+readTextFile encoding file = readTextFile' file (readFileStringOptionsDefault { encoding = encoding })
 
--- | Writes a buffer to a file.
-writeFile
+readTextFile'
   :: FilePath
-  -> Buffer
-  -> Callback Unit
+  -> ReadFileStringOptions
+  -> Callback1 String
   -> Effect Unit
-writeFile file buff cb = runEffectFn4 writeFileImpl file buff {} (handleCallback cb)
+readTextFile' file options cb = runEffectFn3 readFileImpl file (readFileStringOptionsToInternal options) (handleCallback1 cb)
+
+-- | Reads the entire contents of a file returning the result as a raw buffer.
+readFile
+  :: FilePath
+  -> Callback1 Buffer
+  -> Effect Unit
+readFile file = readFile' file readFileBufferOptionsDefault
+
+readFile'
+  :: FilePath
+  -> ReadFileBufferOptions
+  -> Callback1 Buffer
+  -> Effect Unit
+readFile' file options cb = runEffectFn3 readFileImpl file (readFileBufferOptionsToInternal options) (handleCallback1 cb)
 
 -- | Writes text to a file using the specified encoding.
 writeTextFile
   :: Encoding
   -> FilePath
   -> String
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-writeTextFile encoding file buff cb = runEffectFn4 writeFileImpl file buff { encoding: show encoding } (handleCallback cb)
+writeTextFile encoding file buff = writeTextFile' file buff (writeFileStringOptionsDefault { encoding = encoding })
 
--- | Appends the contents of a buffer to a file.
-appendFile
+writeTextFile'
+  :: FilePath
+  -> String
+  -> WriteFileStringOptions
+  -> Callback1 Unit
+  -> Effect Unit
+writeTextFile' file buff options cb = runEffectFn4 writeFileImpl file buff (writeFileStringOptionsToInternal options) (handleCallback1 cb)
+
+-- | Writes a buffer to a file.
+writeFile
   :: FilePath
   -> Buffer
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-appendFile file buff cb = runEffectFn4 appendFileImpl file buff {} (handleCallback cb)
+writeFile file buff = writeFile' file buff writeFileBufferOptionsDefault
+
+writeFile'
+  :: FilePath
+  -> Buffer
+  -> WriteFileBufferOptions
+  -> Callback1 Unit
+  -> Effect Unit
+writeFile' file buff options cb = runEffectFn4 writeFileImpl file buff (writeFileBufferOptionsToInternal options) (handleCallback1 cb)
 
 -- | Appends text to a file using the specified encoding.
 appendTextFile
   :: Encoding
   -> FilePath
   -> String
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-appendTextFile encoding file buff cb = runEffectFn4 appendFileImpl file buff { encoding: show encoding } (handleCallback cb)
+appendTextFile encoding file buff = appendTextFile' file buff (appendFileStringOptionsDefault { encoding = encoding }) 
+
+appendTextFile'
+  :: FilePath
+  -> String
+  -> AppendFileStringOptions
+  -> Callback1 Unit
+  -> Effect Unit
+appendTextFile' file buff options cb = runEffectFn4 appendFileImpl file buff (appendFileStringOptionsToInternal options) (handleCallback1 cb)
+
+-- | Appends a buffer to a file.
+appendFile
+  :: FilePath
+  -> Buffer
+  -> Callback1 Unit
+  -> Effect Unit
+appendFile file buff = appendFile' file buff appendFileBufferOptionsDefault
+
+appendFile'
+  :: FilePath
+  -> Buffer
+  -> AppendFileBufferOptions
+  -> Callback1 Unit
+  -> Effect Unit
+appendFile' file buff options cb = runEffectFn4 appendFileImpl file buff (appendFileBufferOptionsToInternal options) (handleCallback1 cb)
 
 -- | Open a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_open_path_flags_mode_callback)
 -- | for details.
 fdOpen
   :: FilePath
-  -> FileFlags
-  -> Maybe FileMode
-  -> Callback FileDescriptor
+  -> FileFlags -- default 'r'
+  -> Maybe FileMode -- default '0o666', TODO: use Perms?
+  -> Callback1 FileDescriptor
   -> Effect Unit
-fdOpen file flags mode cb = runEffectFn4 openImpl file (fileFlagsToNode flags) (toNullable mode) (handleCallback cb)
+fdOpen file flags mode cb = runEffectFn4 openImpl file (fileFlagsToNode flags) (toNullable mode) (handleCallback1 cb)
 
 -- | Read from a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_read_fd_buffer_offset_length_position_callback)
 -- | for details.
@@ -485,18 +498,27 @@ fdRead
   :: FileDescriptor
   -> Buffer
   -> BufferOffset
-  -> BufferLength
-  -> Maybe FilePosition
-  -> Callback ByteCount
+  -> BufferLength -- TODO: should be Maybe BufferLength
+  -> Maybe FilePosition -- If position is null or -1 , data will be read from the current file position
+  -> Callback1 ByteCount
   -> Effect Unit
-fdRead fd buff off len pos cb = runEffectFn6 readImpl fd buff off len (toNullable pos) (handleCallback cb)
+fdRead fd buff off len pos cb = runEffectFn6 readImpl fd buff off len (toNullable pos) (handleCallback1 cb)
+
+-- | Read from a file asynchronously. See the [Node Documentation](https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback)
+-- | for details.
+fdRead'
+  :: FileDescriptor
+  -> FdReadOptions
+  -> Callback1 (Tuple ByteCount Buffer)
+  -> Effect Unit
+fdRead' fd options cb = runEffectFn3 readWithOptionsImpl fd (fdReadOptionsToInternal options) (handleCallback1Tuple cb)
 
 -- | Convenience function to fill the whole buffer from the current
 -- | file position.
 fdNext
   :: FileDescriptor
   -> Buffer
-  -> Callback ByteCount
+  -> Callback1 ByteCount
   -> Effect Unit
 fdNext fd buff cb = do
   sz <- size buff
@@ -508,18 +530,37 @@ fdWrite
   :: FileDescriptor
   -> Buffer
   -> BufferOffset
-  -> BufferLength
+  -> BufferLength -- TODO: should be Maybe BufferLength
   -> Maybe FilePosition
-  -> Callback ByteCount
+  -> Callback1 ByteCount
   -> Effect Unit
-fdWrite fd buff off len pos cb = runEffectFn6 writeImpl fd buff off len (toNullable pos) (handleCallback cb)
+fdWrite fd buff off len pos cb = runEffectFn6 writeImpl fd buff off len (toNullable pos) (handleCallback1 cb)
+
+-- | Write from a file asynchronously. See the [Node Documentation](https://nodejs.org/docs/latest/api/fs.html#fswritefd-options-callback)
+-- | for details.
+fdWrite'
+  :: FileDescriptor
+  -> FdWriteOptions
+  -> Callback1 (Tuple ByteCount Buffer)
+  -> Effect Unit
+fdWrite' fd options cb = runEffectFn3 writeWithOptionsImpl fd (fdWriteOptionsToInternal options) (handleCallback1Tuple cb)
+
+-- It is unsafe to use fs.write() multiple times on the same file without waiting for the callback. For this scenario, fs.createWriteStream() is recommended.
+fdWriteString
+  :: FileDescriptor
+  -> String
+  -> Maybe FilePosition
+  -> Encoding
+  -> Callback1 (Tuple ByteCount String)
+  -> Effect Unit
+fdWriteString fd string pos encoding cb = runEffectFn5 writeStringImpl fd string (toNullable pos) (encodingToNode encoding) (handleCallback1Tuple cb)
 
 -- | Convenience function to append the whole buffer to the current
 -- | file position.
 fdAppend
   :: FileDescriptor
   -> Buffer
-  -> Callback ByteCount
+  -> Callback1 ByteCount
   -> Effect Unit
 fdAppend fd buff cb = do
   sz <- size buff
@@ -529,97 +570,47 @@ fdAppend fd buff cb = do
 -- | for details.
 fdClose
   :: FileDescriptor
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-fdClose fd cb = runEffectFn2 closeImpl fd (handleCallback cb)
-
-data CpForce = CpForce_False | CpForce_TrueWithoutErrorOnExit | CpForce_TrueWithErrorOnExit
-
-type CpOptionsInternal =
-  { dereference :: Boolean
-  , errorOnExist :: Boolean
-  , filter :: Nullable (Fn2 FilePath FilePath Boolean)
-  , force :: Boolean
-  , mode :: FileMode
-  , preserveTimestamps :: Boolean
-  , recursive :: Boolean
-  , verbatimSymlinks :: Boolean
-  }
-
-type CpOptions =
-  { dereference :: Boolean -- Whether to dereference symlinks
-  , filter :: Maybe (FilePath -> FilePath -> Boolean)
-  , force :: CpForce
-  , mode :: FileMode -- Modifiers for copy operation
-  , preserveTimestamps :: Boolean -- Preserve timestamps from source
-  , recursive :: Boolean -- Copy directories recursively
-  , verbatimSymlinks :: Boolean -- Skip path resolution for symlinks
-  }
-
-cpOptionsToCpOptionsInternal :: CpOptions -> CpOptionsInternal
-cpOptionsToCpOptionsInternal opts =
-  { dereference: opts.dereference
-  , errorOnExist: case opts.force of
-      CpForce_TrueWithErrorOnExit -> true
-      _ -> false
-  , filter: toNullable $ map mkFn2 (opts.filter)
-  , force: case opts.force of
-      CpForce_False -> false
-      _ -> true
-  , mode: opts.mode
-  , preserveTimestamps: opts.preserveTimestamps
-  , recursive: opts.recursive
-  , verbatimSymlinks: opts.verbatimSymlinks
-  }
-
-cpOptionsDefault :: CpOptions
-cpOptionsDefault =
-  { dereference: false
-  , filter: Nothing
-  , force: CpForce_TrueWithoutErrorOnExit
-  , mode: 0
-  , preserveTimestamps: false
-  , recursive: false
-  , verbatimSymlinks: false
-  }
+fdClose fd cb = runEffectFn2 closeImpl fd (handleCallback1 cb)
 
 -- | Copy a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fspromises_copyfile_src_dest_mode)
 -- | for details.
-cp :: FilePath -> FilePath -> Callback Unit -> Effect Unit
+cp :: FilePath -> FilePath -> Callback1 Unit -> Effect Unit
 cp src dest = cp' src dest cpOptionsDefault
 
-cp' :: FilePath -> FilePath -> CpOptions -> Callback Unit -> Effect Unit
-cp' src dest opts cb = runEffectFn4 cpImpl src dest (cpOptionsToCpOptionsInternal opts) (handleCallback cb)
+cp' :: FilePath -> FilePath -> CpOptions -> Callback1 Unit -> Effect Unit
+cp' src dest opts cb = runEffectFn4 cpImpl src dest (cpOptionsToCpOptionsInternal opts) (handleCallback1 cb)
 
 -- | Change permissions on a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fchmod_fd_mode_callback)
 -- | for details.
-fchmod :: FileDescriptor -> Perms -> Callback Unit -> Effect Unit
-fchmod fd perms cb = runEffectFn3 fchmodImpl fd (permsToString perms) (handleCallback cb)
+fchmod :: FileDescriptor -> Perms -> Callback1 Unit -> Effect Unit
+fchmod fd perms cb = runEffectFn3 fchmodImpl fd (permsToString perms) (handleCallback1 cb)
 
 -- | Change ownership of a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fchown_fd_uid_gid_callback)
 -- | for details.
-fchown :: FileDescriptor -> Int -> Int -> Callback Unit -> Effect Unit
-fchown fd uid gid cb = runEffectFn4 fchownImpl fd uid gid (handleCallback cb)
+fchown :: FileDescriptor -> Int -> Int -> Callback1 Unit -> Effect Unit
+fchown fd uid gid cb = runEffectFn4 fchownImpl fd uid gid (handleCallback1 cb)
 
 -- | Synchronize a file's in-core state with storage. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fdatasync_fd_callback)
 -- | for details.
-fdatasync :: FileDescriptor -> Callback Unit -> Effect Unit
-fdatasync fd cb = runEffectFn2 fdatasyncImpl fd (handleCallback cb)
+fdatasync :: FileDescriptor -> Callback1 Unit -> Effect Unit
+fdatasync fd cb = runEffectFn2 fdatasyncImpl fd (handleCallback1 cb)
 
 -- | Get file status information. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fstat_fd_callback)
 -- | for details.
-fstat :: FileDescriptor -> Callback Stats -> Effect Unit
-fstat fd cb = runEffectFn2 fstatImpl fd (handleCallback cb)
+fstat :: FileDescriptor -> Callback1 Stats -> Effect Unit
+fstat fd cb = runEffectFn2 fstatImpl fd (handleCallback1 cb)
 
 -- | Flushes a file descriptor to disk. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fsync_fd_callback)
 -- | for details.
-fsync :: FileDescriptor -> Callback Unit -> Effect Unit
-fsync fd cb = runEffectFn2 fsyncImpl fd (handleCallback cb)
+fsync :: FileDescriptor -> Callback1 Unit -> Effect Unit
+fsync fd cb = runEffectFn2 fsyncImpl fd (handleCallback1 cb)
 
 -- | Truncate a file to a specified length. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_ftruncate_fd_len_callback)
 -- | for details.
-ftruncate :: FileDescriptor -> Int -> Callback Unit -> Effect Unit
-ftruncate fd len cb = runEffectFn3 ftruncateImpl fd len (handleCallback cb)
+ftruncate :: FileDescriptor -> Int -> Callback1 Unit -> Effect Unit
+ftruncate fd len cb = runEffectFn3 ftruncateImpl fd len (handleCallback1 cb)
 
 -- | Change file timestamps for a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_futimes_fd_atime_mtime_callback)
 -- | for details.
@@ -627,33 +618,33 @@ futimes
   :: FilePath
   -> DateTime
   -> DateTime
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-futimes file atime mtime cb = runEffectFn4 lutimesImpl file (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime) (handleCallback cb)
+futimes file atime mtime cb = runEffectFn4 lutimesImpl file (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime) (handleCallback1 cb)
 
 -- | Perform pattern matching in file paths. See the [Node Documentation](https://nodejs.org/api/glob.html#globglob_pattern_options_callback)
 -- | for details.
-glob :: Array FilePath -> Callback (Array FilePath) -> Effect Unit
-glob pattern = glob' pattern { cwd: Nothing, exclude: Nothing }
+glob :: Array FilePath -> Callback1 (Array FilePath) -> Effect Unit
+glob pattern = glob' pattern globFilePathOptionsDefault
 
-glob' :: Array FilePath -> { cwd :: Maybe FilePath, exclude :: Maybe (FilePath -> Boolean) } -> Callback (Array FilePath) -> Effect Unit
-glob' pattern { cwd, exclude } cb = runEffectFn3 globImpl pattern { cwd: toNullable cwd, exclude: toNullable exclude, withFileTypes: false } (handleCallback cb)
+glob' :: Array FilePath -> GlobFilePathOptions -> Callback1 (Array FilePath) -> Effect Unit
+glob' pattern options cb = runEffectFn3 globImpl pattern (globFilePathOptionsToInternal options) (handleCallback1 cb)
 
-globDirent :: Array FilePath -> Callback (Array (Dirent DirentNameTypeString)) -> Effect Unit
-globDirent pattern = globDirent' pattern { cwd: Nothing, exclude: Nothing }
+globDirent :: Array FilePath -> Callback1 (Array (Dirent DirentNameTypeString)) -> Effect Unit
+globDirent pattern = globDirent' pattern globDirentOptionsDefault
 
-globDirent' :: Array FilePath -> { cwd :: Maybe FilePath, exclude :: Maybe (Dirent DirentNameTypeString -> Boolean) } -> Callback (Array (Dirent DirentNameTypeString)) -> Effect Unit
-globDirent' pattern { cwd, exclude } cb = runEffectFn3 globImpl pattern { cwd: toNullable cwd, exclude: toNullable exclude, withFileTypes: true } (handleCallback cb)
+globDirent' :: Array FilePath -> GlobDirentOptions -> Callback1 (Array (Dirent DirentNameTypeString)) -> Effect Unit
+globDirent' pattern options cb = runEffectFn3 globImpl pattern (globDirentOptionsToInternal options) (handleCallback1 cb)
 
 -- | Change permissions on a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lchmod_path_mode_callback)
 -- | for details.
-lchmod :: FilePath -> Perms -> Callback Unit -> Effect Unit
-lchmod path perms cb = runEffectFn3 lchmodImpl path (permsToString perms) (handleCallback cb)
+lchmod :: FilePath -> Perms -> Callback1 Unit -> Effect Unit
+lchmod path perms cb = runEffectFn3 lchmodImpl path (permsToString perms) (handleCallback1 cb)
 
 -- | Change ownership of a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lchown_path_uid_gid_callback)
 -- | for details.
-lchown :: FilePath -> Int -> Int -> Callback Unit -> Effect Unit
-lchown path uid gid cb = runEffectFn4 lchownImpl path uid gid (handleCallback cb)
+lchown :: FilePath -> Int -> Int -> Callback1 Unit -> Effect Unit
+lchown path uid gid cb = runEffectFn4 lchownImpl path uid gid (handleCallback1 cb)
 
 -- | Change timestamps for a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lutimes_path_atime_mtime_callback)
 -- | for details.
@@ -661,41 +652,36 @@ lutimes
   :: FilePath
   -> DateTime
   -> DateTime
-  -> Callback Unit
+  -> Callback1 Unit
   -> Effect Unit
-lutimes file atime mtime cb = runEffectFn4 lutimesImpl file (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime) (handleCallback cb)
+lutimes file atime mtime cb = runEffectFn4 lutimesImpl file (datetimeToUnixEpochTimeInSeconds atime) (datetimeToUnixEpochTimeInSeconds mtime) (handleCallback1 cb)
 
 -- | TODO: path - Buffer Url, returns Promise
 -- | Open a file as a blob. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_class_filehandle)
 -- | for details.
 -- openAsBlob :: FilePath -> Promise Blob -> Effect Unit
--- openAsBlob path cb = runEffectFn2 openAsBlobImpl path (handleCallback cb)
-
-type OpendirOptions = { encoding :: Encoding, bufferSize :: Int, recursive :: Boolean }
-
-opendirOptionsDefault :: OpendirOptions
-opendirOptionsDefault = { bufferSize: 32, recursive: false, encoding: UTF8 }
+-- openAsBlob path cb = runEffectFn2 openAsBlobImpl path (handleCallback1 cb)
 
 -- | Open a directory. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_opendir_path_options_callback)
 -- | for details.
-opendir' :: FilePath -> OpendirOptions -> Callback Dir -> Effect Unit
-opendir' path { encoding, bufferSize, recursive } cb = runEffectFn3 opendirImpl path { encoding: encodingToNode encoding, bufferSize, recursive } (handleCallback cb)
+opendir' :: FilePath -> OpendirOptions -> Callback1 Dir -> Effect Unit
+opendir' path options cb = runEffectFn3 opendirImpl path (opendirOptionsToInternal options) (handleCallback1 cb)
 
 -- | Open a directory. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_opendir_path_options_callback)
 -- | for details.
 -- | NOTE: encoding: 'buffer' is not supported, will throw error "TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received an instance of Buffer"
-opendir :: FilePath -> Callback Dir -> Effect Unit
+opendir :: FilePath -> Callback1 Dir -> Effect Unit
 opendir path = opendir' path opendirOptionsDefault
 
 -- | Read from a file descriptor into a buffer array. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_readv_fd_buffers_position_callback)
 -- | for details.
-readv :: FileDescriptor -> Array Buffer -> Maybe FilePosition -> Callback (Tuple ByteCount (Array Buffer)) -> Effect Unit
-readv fd buffers position cb = runEffectFn4 readvImpl fd buffers (toNullable position) (handleCallback2 cb)
+readv :: FileDescriptor -> Array Buffer -> Maybe FilePosition -> Callback1 (Tuple ByteCount (Array Buffer)) -> Effect Unit
+readv fd buffers position cb = runEffectFn4 readvImpl fd buffers (toNullable position) (handleCallback1Tuple cb)
 
 -- | Get file system statistics. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_statfs_path_callback)
 -- | for details.
-statfs :: FilePath -> Callback Stats -> Effect Unit
-statfs path cb = runEffectFn2 statfsImpl path (handleCallback cb)
+statfs :: FilePath -> Callback1 Stats -> Effect Unit
+statfs path cb = runEffectFn2 statfsImpl path (handleCallback1 cb)
 
 -- -- | Stop watching a file for changes. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_unwatchfile_filename_listener)
 -- -- | for details.
@@ -714,5 +700,5 @@ statfs path cb = runEffectFn2 statfsImpl path (handleCallback cb)
 
 -- | Write from an array of buffers to a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_writev_fd_buffers_position_callback)
 -- | for details.
-writev :: FileDescriptor -> Array Buffer -> Maybe FilePosition -> Callback (Tuple ByteCount (Array Buffer)) -> Effect Unit
-writev fd buffers position cb = runEffectFn4 writevImpl fd buffers (toNullable position) (handleCallback2 cb)
+writev :: FileDescriptor -> Array Buffer -> Maybe FilePosition -> Callback1 (Tuple ByteCount (Array Buffer)) -> Effect Unit
+writev fd buffers position cb = runEffectFn4 writevImpl fd buffers (toNullable position) (handleCallback1Tuple cb)

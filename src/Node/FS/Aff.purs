@@ -9,8 +9,8 @@ module Node.FS.Aff
   , truncate
   , chown
   , chmod
-  , stat
   , lstat
+  , stat
   , link
   , symlink
   , readlink
@@ -40,8 +40,11 @@ module Node.FS.Aff
   , appendTextFile
   , fdOpen
   , fdRead
+  , fdRead'
   , fdNext
   , fdWrite
+  , fdWrite'
+  , fdWriteString
   , fdAppend
   , fdClose
   , cp
@@ -69,7 +72,6 @@ module Node.FS.Aff
   -- , watch
   -- , watchFile
   , writev
-  , module Exports
   ) where
 
 import Prelude
@@ -78,83 +80,19 @@ import Data.DateTime (DateTime)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe)
 import Data.Tuple (Tuple)
-import Effect (Effect)
 import Effect.Aff (Aff, Error, makeAff, nonCanceler)
 import Node.Buffer (Buffer)
 import Node.Encoding (Encoding)
-import Node.FS as F
-import Node.FS.Async (CpOptions, CpForce(..), cpOptionsDefault, OpendirOptions , opendirOptionsDefault, RmOptions, rmOptionsDefault, RmdirOptions, rmdirOptionsDefault) as Exports
-import Node.FS.Async (CpOptions, OpendirOptions, RmdirOptions, RmOptions)
+import Node.FS.Types (BufferLength, BufferOffset, ByteCount, FileDescriptor, FileMode, FilePosition, SymlinkType)
+import Node.FS.Internal.AffUtils (toAff1, toAff2, toAff3, toAff4, toAff5)
+import Node.FS.Options (CpOptions, FdReadOptions, FdWriteOptions, OpendirOptions, RealpathOptions, RmOptions, RmdirOptions)
+import Node.FS.Constants (AccessMode, CopyMode, FileFlags)
 import Node.FS.Async as A
-import Node.FS.Constants (AccessMode, CopyMode)
 import Node.FS.Dir (Dir)
 import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
 import Node.FS.Perms (Perms)
 import Node.FS.Stats (Stats)
 import Node.Path (FilePath)
-
-toAff
-  :: forall a
-   . (A.Callback a -> Effect Unit)
-  -> Aff a
-toAff p = makeAff \k -> p k $> nonCanceler
-
-toAff1
-  :: forall a x
-   . (x -> A.Callback a -> Effect Unit)
-  -> x
-  -> Aff a
-toAff1 f a = toAff (f a)
-
-toAff2
-  :: forall a x y
-   . (x -> y -> A.Callback a -> Effect Unit)
-  -> x
-  -> y
-  -> Aff a
-toAff2 f a b = toAff (f a b)
-
-toAff3
-  :: forall a x y z
-   . (x -> y -> z -> A.Callback a -> Effect Unit)
-  -> x
-  -> y
-  -> z
-  -> Aff a
-toAff3 f a b c = toAff (f a b c)
-
--- toAff4
---   :: forall a x y z
---    . (x -> y -> z -> y -> A.Callback a -> Effect Unit)
---   -> x
---   -> y
---   -> z
---   -> y
---   -> Aff a
--- toAff4 f a b c d = toAff (f a b c d)
-
-toAff5
-  :: forall a w v x y z
-   . (w -> v -> x -> y -> z -> A.Callback a -> Effect Unit)
-  -> w
-  -> v
-  -> x
-  -> y
-  -> z
-  -> Aff a
-toAff5 f a b c d e = toAff (f a b c d e)
-
--- toAff6
---   :: forall a w v x y z t
---    . (w -> v -> x -> y -> z -> t -> A.Callback a -> Effect Unit)
---   -> w
---   -> v
---   -> x
---   -> y
---   -> z
---   -> t
---   -> Aff a
--- toAff6 f a b c d e t = toAff (f a b c d e t)
 
 access :: FilePath -> Aff (Maybe Error)
 access path = makeAff \k -> do
@@ -226,7 +164,7 @@ link = toAff2 A.link
 symlink
   :: FilePath
   -> FilePath
-  -> F.SymlinkType
+  -> SymlinkType
   -> Aff Unit
 symlink = toAff3 A.symlink
 
@@ -246,7 +184,7 @@ realpath = toAff1 A.realpath
 -- | Find the canonicalized absolute location for a path using a cache object
 -- | for already resolved paths.
 -- |
-realpath' :: forall cache. FilePath -> { | cache } -> Aff FilePath
+realpath' :: FilePath -> RealpathOptions -> Aff FilePath
 realpath' = toAff2 A.realpath'
 
 -- |
@@ -376,46 +314,71 @@ appendTextFile = toAff3 A.appendTextFile
 -- | for details.
 fdOpen
   :: FilePath
-  -> F.FileFlags
-  -> Maybe F.FileMode
-  -> Aff F.FileDescriptor
+  -> FileFlags
+  -> Maybe FileMode
+  -> Aff FileDescriptor
 fdOpen = toAff3 A.fdOpen
 
 -- | Read from a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_read_fd_buffer_offset_length_position_callback)
 -- | for details.
 fdRead
-  :: F.FileDescriptor
+  :: FileDescriptor
   -> Buffer
-  -> F.BufferOffset
-  -> F.BufferLength
-  -> Maybe F.FilePosition
-  -> Aff F.ByteCount
+  -> BufferOffset
+  -> BufferLength
+  -> Maybe FilePosition
+  -> Aff ByteCount
 fdRead = toAff5 A.fdRead
+
+-- | Read from a file asynchronously. See the [Node Documentation](https://nodejs.org/docs/latest/api/fs.html#fsreadfd-options-callback)
+-- | for details.
+fdRead'
+  :: FileDescriptor
+  -> FdReadOptions
+  -> Aff (Tuple ByteCount Buffer)
+fdRead' = toAff2 A.fdRead'
 
 -- | Convenience function to fill the whole buffer from the current
 -- | file position.
-fdNext :: F.FileDescriptor -> Buffer -> Aff F.ByteCount
+fdNext :: FileDescriptor -> Buffer -> Aff ByteCount
 fdNext = toAff2 A.fdNext
 
 -- | Write to a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_write_fd_buffer_offset_length_position_callback)
 -- | for details.
 fdWrite
-  :: F.FileDescriptor
+  :: FileDescriptor
   -> Buffer
-  -> F.BufferOffset
-  -> F.BufferLength
-  -> Maybe F.FilePosition
-  -> Aff F.ByteCount
+  -> BufferOffset
+  -> BufferLength
+  -> Maybe FilePosition
+  -> Aff ByteCount
 fdWrite = toAff5 A.fdWrite
+
+-- | Write from a file asynchronously. See the [Node Documentation](https://nodejs.org/docs/latest/api/fs.html#fswritefd-options-callback)
+-- | for details.
+fdWrite'
+  :: FileDescriptor
+  -> FdWriteOptions
+  -> Aff (Tuple ByteCount Buffer)
+fdWrite' = toAff2 A.fdWrite'
+
+-- It is unsafe to use fs.write() multiple times on the same file without waiting for the callback. For this scenario, fs.createWriteStream() is recommended.
+fdWriteString
+  :: FileDescriptor
+  -> String
+  -> Maybe FilePosition
+  -> Encoding
+  -> Aff (Tuple ByteCount String)
+fdWriteString = toAff4 A.fdWriteString
 
 -- | Convenience function to append the whole buffer to the current
 -- | file position.
-fdAppend :: F.FileDescriptor -> Buffer -> Aff F.ByteCount
+fdAppend :: FileDescriptor -> Buffer -> Aff ByteCount
 fdAppend = toAff2 A.fdAppend
 
 -- | Close a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_close_fd_callback)
 -- | for details.
-fdClose :: F.FileDescriptor -> Aff Unit
+fdClose :: FileDescriptor -> Aff Unit
 fdClose = toAff1 A.fdClose
 
 -- | Copy a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fspromises_copyfile_src_dest_mode)
@@ -428,32 +391,32 @@ cp' = toAff3 A.cp'
 
 -- | Change permissions on a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fchmod_fd_mode_callback)
 -- | for details.
-fchmod :: F.FileDescriptor -> Perms -> Aff Unit
+fchmod :: FileDescriptor -> Perms -> Aff Unit
 fchmod = toAff2 A.fchmod
 
 -- | Change ownership of a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fchown_fd_uid_gid_callback)
 -- | for details.
-fchown :: F.FileDescriptor -> Int -> Int -> Aff Unit
+fchown :: FileDescriptor -> Int -> Int -> Aff Unit
 fchown = toAff3 A.fchown
 
 -- | Synchronize a file's in-core state with storage. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fdatasync_fd_callback)
 -- | for details.
-fdatasync :: F.FileDescriptor -> Aff Unit
+fdatasync :: FileDescriptor -> Aff Unit
 fdatasync = toAff1 A.fdatasync
 
 -- | Get file status information. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fstat_fd_callback)
 -- | for details.
-fstat :: F.FileDescriptor -> Aff Stats
+fstat :: FileDescriptor -> Aff Stats
 fstat = toAff1 A.fstat
 
 -- | Flushes a file descriptor to disk. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fsync_fd_callback)
 -- | for details.
-fsync :: F.FileDescriptor -> Aff Unit
+fsync :: FileDescriptor -> Aff Unit
 fsync = toAff1 A.fsync
 
 -- | Truncate a file to a specified length. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_ftruncate_fd_len_callback)
 -- | for details.
-ftruncate :: F.FileDescriptor -> Int -> Aff Unit
+ftruncate :: FileDescriptor -> Int -> Aff Unit
 ftruncate = toAff2 A.ftruncate
 
 -- | Change file timestamps for a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_futimes_fd_atime_mtime_callback)
@@ -507,7 +470,7 @@ opendir' = toAff2 A.opendir'
 
 -- | Read from a file descriptor into a buffer array. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_readv_fd_buffers_position_callback)
 -- | for details.
-readv :: F.FileDescriptor -> Array Buffer -> Maybe F.FilePosition -> Aff (Tuple F.ByteCount (Array Buffer))
+readv :: FileDescriptor -> Array Buffer -> Maybe FilePosition -> Aff (Tuple ByteCount (Array Buffer))
 readv = toAff3 A.readv
 
 -- | TODO: bigint, path Buffer Url
@@ -534,5 +497,5 @@ statfs = toAff1 A.statfs
 
 -- | Write from an array of buffers to a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_writev_fd_buffers_position_callback)
 -- | for details.
-writev :: F.FileDescriptor -> Array Buffer -> Maybe F.FilePosition -> Aff (Tuple F.ByteCount (Array Buffer))
+writev :: FileDescriptor -> Array Buffer -> Maybe FilePosition -> Aff (Tuple ByteCount (Array Buffer))
 writev = toAff3 A.writev

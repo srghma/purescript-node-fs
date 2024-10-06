@@ -16,22 +16,10 @@ import Effect.Class (liftEffect)
 import Effect.Exception (Error)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Node.FS.Dir (Callback2, Dir)
+import Node.FS.Dir (Dir)
 import Node.FS.Dir as Dir
 import Node.FS.Dirent (Dirent, DirentNameTypeString)
-
-toAff
-  :: forall a
-   . (Callback2 a -> Effect Unit)
-  -> Aff a
-toAff p = makeAff \k -> p k $> nonCanceler
-
-toAff1
-  :: forall a x
-   . (x -> Callback2 a -> Effect Unit)
-  -> x
-  -> Aff a
-toAff1 f a = toAff (f a)
+import Node.FS.Internal.AffUtils
 
 read :: Dir -> Aff (Maybe (Dirent DirentNameTypeString))
 read = toAff1 Dir.read

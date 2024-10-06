@@ -11,12 +11,13 @@ import Effect.Exception (Error, catchException, error, message, throw, throwExce
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
 import Node.FS (FileFlags(..), SymlinkType(..))
-import Node.FS.Aff (rmOptionsDefault)
+import Node.FS.Aff
 import Node.FS.Async as A
 import Node.FS.Constants (copyFile_EXCL, r_OK, w_OK)
 import Node.FS.Perms (mkPerms, permsAll)
 import Node.FS.Perms as Perms
 import Node.FS.Stats (statusChangedTime, accessedTime, modifiedTime, isSymbolicLink, isSocket, isFIFO, isCharacterDevice, isBlockDevice, isDirectory, isFile)
+import Node.FS.Options
 import Node.FS.Sync (chmod)
 import Node.FS.Sync as S
 import Node.Path as Path

@@ -11,7 +11,8 @@ import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (Error)
 import Node.Encoding (Encoding(..))
-import Node.FS.Aff (opendirOptionsDefault, rmOptionsDefault)
+import Node.FS.Aff 
+import Node.FS.Options 
 import Node.FS.Aff as A
 import Node.FS.Aff.Dir (close, entries, read)
 import Node.FS.Dirent (Dirent, DirentNameTypeString)
