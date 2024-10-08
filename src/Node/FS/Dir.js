@@ -1,3 +1,5 @@
+export { inspect as showDirObj } from "util";
+
 export const closeImpl = (dir, callback) => dir.close(callback);
 export const closeSyncImpl = (dir) => dir.close();
 export const path = (dir) => dir.path;

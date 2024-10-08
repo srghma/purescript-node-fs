@@ -13,6 +13,11 @@ import Node.Path (FilePath)
 -- Foreign imports for the Dir class
 foreign import data Dir :: Type
 
+foreign import showDirObj :: Dir -> String
+
+instance Show Dir where
+  show s = showDirObj s
+
 foreign import closeImpl :: EffectFn2 Dir JSCallback0 Unit
 foreign import closeSyncImpl :: EffectFn1 Dir Unit
 foreign import readImpl :: EffectFn2 Dir (JSCallback1 (Nullable (Dirent DirentNameTypeString))) Unit

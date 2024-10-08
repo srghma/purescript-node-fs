@@ -55,4 +55,4 @@ foreign import parentPath :: forall direntnametype. Dirent direntnametype -> Fil
 foreign import showDirentObj :: forall direntnametype. Dirent direntnametype -> String
 
 instance Show (Dirent direntnametype) where
-  show s = "Dirent " <> showDirentObj s
+  show s = showDirentObj s
