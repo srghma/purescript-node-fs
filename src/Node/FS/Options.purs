@@ -10,12 +10,12 @@ import Foreign (Foreign)
 import Foreign as Foreign
 import Node.Buffer (Buffer)
 import Node.Encoding (Encoding(..), encodingToNode)
-import Node.FS.Constants (FileFlags(..), fileFlagsToNode)
+import Node.FS.Constants (CopyMode, FileFlags(..), copyFile_NO_FLAGS, fileFlagsToNode)
 import Node.FS.Dirent (Dirent, DirentNameTypeString)
 import Node.FS.Internal.Undefinable (Undefinable)
 import Node.FS.Internal.Undefinable as Undefinable
 import Node.FS.Perms (Perms, all, mkPerms, permsToString, read, write)
-import Node.FS.Types (BufferLength, BufferOffset, EncodingString, FileMode, FilePosition)
+import Node.FS.Types (BufferLength, BufferOffset, EncodingString, FilePosition)
 import Node.Path (FilePath)
 
 type RmdirOptions = { maxRetries :: Int, retryDelay :: Int }
@@ -254,7 +254,7 @@ type CpOptionsInternal =
   -- if null - will throw "TypeError [ERR_INVALID_ARG_TYPE]: The "options.filter" property must be of type function. Received null"
   , filter :: Undefinable (Fn2 FilePath FilePath Boolean)
   , force :: Boolean
-  , mode :: FileMode
+  , mode :: CopyMode
   , preserveTimestamps :: Boolean
   , recursive :: Boolean
   , verbatimSymlinks :: Boolean
@@ -266,7 +266,7 @@ type CpOptions =
   { dereference :: Boolean -- Whether to dereference symlinks
   , filter :: Maybe (FilePath -> FilePath -> Boolean)
   , force :: CpForce
-  , mode :: FileMode -- Modifiers for copy operation
+  , mode :: CopyMode -- Modifiers for copy operation
   , preserveTimestamps :: Boolean -- Preserve timestamps from source
   , recursive :: Boolean -- Copy directories recursively
   , verbatimSymlinks :: Boolean -- Skip path resolution for symlinks
@@ -277,7 +277,7 @@ cpOptionsDefault =
   { dereference: false
   , filter: Nothing
   , force: CpForce_TrueWithoutErrorOnExit
-  , mode: 0
+  , mode: copyFile_NO_FLAGS
   , preserveTimestamps: false
   , recursive: false
   , verbatimSymlinks: false
