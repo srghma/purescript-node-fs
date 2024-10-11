@@ -1,6 +1,5 @@
 module Node.FS.Options where
 
-import Node.FS.Types (BufferLength, BufferOffset, EncodingString, FileMode, FilePosition)
 import Prelude
 
 import Data.Function.Uncurried (Fn2, mkFn2)
@@ -13,7 +12,10 @@ import Node.Buffer (Buffer)
 import Node.Encoding (Encoding(..), encodingToNode)
 import Node.FS.Constants (FileFlags(..), fileFlagsToNode)
 import Node.FS.Dirent (Dirent, DirentNameTypeString)
+import Node.FS.Internal.Undefinable (Undefinable)
+import Node.FS.Internal.Undefinable as Undefinable
 import Node.FS.Perms (Perms, all, mkPerms, permsToString, read, write)
+import Node.FS.Types (BufferLength, BufferOffset, EncodingString, FileMode, FilePosition)
 import Node.Path (FilePath)
 
 type RmdirOptions = { maxRetries :: Int, retryDelay :: Int }
@@ -249,7 +251,8 @@ fdWriteOptionsToInternal { offset, length, position } = { offset, length: Nullab
 type CpOptionsInternal =
   { dereference :: Boolean
   , errorOnExist :: Boolean
-  , filter :: Nullable (Fn2 FilePath FilePath Boolean)
+  -- if null - will throw "TypeError [ERR_INVALID_ARG_TYPE]: The "options.filter" property must be of type function. Received null"
+  , filter :: Undefinable (Fn2 FilePath FilePath Boolean)
   , force :: Boolean
   , mode :: FileMode
   , preserveTimestamps :: Boolean
@@ -286,7 +289,7 @@ cpOptionsToCpOptionsInternal opts =
   , errorOnExist: case opts.force of
       CpForce_TrueWithErrorOnExit -> true
       _ -> false
-  , filter: toNullable $ map mkFn2 (opts.filter)
+  , filter: Undefinable.toUndefinable $ map mkFn2 (opts.filter)
   , force: case opts.force of
       CpForce_False -> false
       _ -> true
@@ -326,4 +329,3 @@ opendirOptionsDefault = { bufferSize: 32, recursive: false, encoding: UTF8 }
 
 opendirOptionsToInternal :: OpendirOptions -> OpendirOptionsInternal
 opendirOptionsToInternal { encoding, bufferSize, recursive } = { encoding: encodingToNode encoding, bufferSize, recursive }
-

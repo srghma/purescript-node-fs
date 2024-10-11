@@ -40,5 +40,5 @@ package:
       - node-event-emitter
 workspace:
   packageSet:
-    registry: 60.3.0
+    registry: 60.5.0
   extraPackages: {}
