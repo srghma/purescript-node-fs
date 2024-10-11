@@ -192,6 +192,10 @@ main = do
   S.copyFile readableFixturePath destReadPath
   unlessM (S.exists destReadPath) do
     throw $ destReadPath <> " does not exist after copy"
+  let destReadPath2 = Path.concat [ tempDir, "readable2.txt" ]
+  S.cp readableFixturePath destReadPath2
+  unlessM (S.exists destReadPath2) do
+    throw $ destReadPath2 <> " does not exist after copy"
 
   copyErr <- try $ S.copyFile' readableFixturePath destReadPath copyFile_EXCL
   case copyErr of
