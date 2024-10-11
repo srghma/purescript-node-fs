@@ -250,41 +250,56 @@ fdWriteOptionsToInternal { offset, length, position } = { offset, length: Nullab
 
 type CpOptionsInternal =
   { dereference :: Boolean
-  , errorOnExist :: Boolean
+  , errorOnExist :: Boolean -- Whether to dereference symlinks
   -- if null - will throw "TypeError [ERR_INVALID_ARG_TYPE]: The "options.filter" property must be of type function. Received null"
   , filter :: Undefinable (Fn2 FilePath FilePath Boolean)
   , force :: Boolean
-  , mode :: CopyMode
-  , preserveTimestamps :: Boolean
-  , recursive :: Boolean
-  , verbatimSymlinks :: Boolean
-  }
-
-data CpForce = CpForce_False | CpForce_TrueWithoutErrorOnExit | CpForce_TrueWithErrorOnExit
-
-type CpOptions =
-  { dereference :: Boolean -- Whether to dereference symlinks
-  , filter :: Maybe (FilePath -> FilePath -> Boolean)
-  , force :: CpForce
   , mode :: CopyMode -- Modifiers for copy operation
   , preserveTimestamps :: Boolean -- Preserve timestamps from source
   , recursive :: Boolean -- Copy directories recursively
   , verbatimSymlinks :: Boolean -- Skip path resolution for symlinks
   }
 
-cpOptionsDefault :: CpOptions
-cpOptionsDefault =
+data CpForce = CpForce_False | CpForce_TrueWithoutErrorOnExit | CpForce_TrueWithErrorOnExit
+
+type CpDirOptions =
+  { dereference :: Boolean
+  , filter :: Maybe (FilePath -> FilePath -> Boolean)
+  , force :: CpForce
+  , mode :: CopyMode
+  , preserveTimestamps :: Boolean
+  , verbatimSymlinks :: Boolean
+  }
+
+type CpFileOptions =
+  { dereference :: Boolean
+  , force :: CpForce
+  , mode :: CopyMode
+  , preserveTimestamps :: Boolean
+  , verbatimSymlinks :: Boolean
+  }
+
+cpDirOptionsDefault :: CpDirOptions
+cpDirOptionsDefault =
   { dereference: false
   , filter: Nothing
   , force: CpForce_TrueWithoutErrorOnExit
   , mode: copyFile_NO_FLAGS
   , preserveTimestamps: false
-  , recursive: false
   , verbatimSymlinks: false
   }
 
-cpOptionsToCpOptionsInternal :: CpOptions -> CpOptionsInternal
-cpOptionsToCpOptionsInternal opts =
+cpFileOptionsDefault :: CpFileOptions
+cpFileOptionsDefault =
+  { dereference: false
+  , force: CpForce_TrueWithoutErrorOnExit
+  , mode: copyFile_NO_FLAGS
+  , preserveTimestamps: false
+  , verbatimSymlinks: false
+  }
+
+cpDirOptionsToCpOptionsInternal :: CpDirOptions -> CpOptionsInternal
+cpDirOptionsToCpOptionsInternal opts =
   { dereference: opts.dereference
   , errorOnExist: case opts.force of
       CpForce_TrueWithErrorOnExit -> true
@@ -295,7 +310,23 @@ cpOptionsToCpOptionsInternal opts =
       _ -> true
   , mode: opts.mode
   , preserveTimestamps: opts.preserveTimestamps
-  , recursive: opts.recursive
+  , recursive: true
+  , verbatimSymlinks: opts.verbatimSymlinks
+  }
+
+cpFileOptionsToCpOptionsInternal :: CpFileOptions -> CpOptionsInternal
+cpFileOptionsToCpOptionsInternal opts =
+  { dereference: opts.dereference
+  , errorOnExist: case opts.force of
+      CpForce_TrueWithErrorOnExit -> true
+      _ -> false
+  , filter: Undefinable.undefined
+  , force: case opts.force of
+      CpForce_False -> false
+      _ -> true
+  , mode: opts.mode
+  , preserveTimestamps: opts.preserveTimestamps
+  , recursive: false
   , verbatimSymlinks: opts.verbatimSymlinks
   }
 

@@ -8,18 +8,20 @@ import Data.Traversable (for_, traverse)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (Error, catchException, error, message, throw, throwException, try)
+import Effect.Exception as Error
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
 import Node.FS (FileFlags(..), SymlinkType(..))
 import Node.FS.Async as A
 import Node.FS.Constants (copyFile_EXCL, r_OK, w_OK)
+import Node.FS.Options (rmOptionsDefault)
 import Node.FS.Perms (mkPerms, permsAll)
 import Node.FS.Perms as Perms
 import Node.FS.Stats (statusChangedTime, accessedTime, modifiedTime, isSymbolicLink, isSocket, isFIFO, isCharacterDevice, isBlockDevice, isDirectory, isFile)
-import Node.FS.Options (rmOptionsDefault)
 import Node.FS.Sync (chmod)
 import Node.FS.Sync as S
 import Node.Path as Path
+import Test.Assert (assertEqual')
 import Unsafe.Coerce (unsafeCoerce)
 
 -- Cheat to allow `main` to type check. See also issue #5 in
@@ -192,12 +194,30 @@ main = do
   S.copyFile readableFixturePath destReadPath
   unlessM (S.exists destReadPath) do
     throw $ destReadPath <> " does not exist after copy"
-  let destReadPath2 = Path.concat [ tempDir, "readable2.txt" ]
-  S.cp readableFixturePath destReadPath2
-  unlessM (S.exists destReadPath2) do
-    throw $ destReadPath2 <> " does not exist after copy"
-
   copyErr <- try $ S.copyFile' readableFixturePath destReadPath copyFile_EXCL
   case copyErr of
     Left _ -> pure unit
     Right _ -> throw $ destReadPath <> " already exists, but copying a file to there did not throw an error with COPYFILE_EXCL option"
+
+  log "copy file using cp: ok"
+  let destReadPath2 = Path.concat [ tempDir, "readable2.txt" ]
+  S.cpFile readableFixturePath destReadPath2
+  unlessM (S.exists destReadPath2) do
+    throw $ destReadPath2 <> " does not exist after copy"
+
+  log "copy dir using cp: if copy using cpDir - ok"
+  S.cpDir (tempDir <> "/") (tempDir <> "2")
+
+  log "copy dir using cp: if copy using cpDir - error - ERR_FS_EISDIR \"Recursive option not enabled\""
+  let
+    cpFileShouldThrow_from = tempDir <> "/"
+    cpFileShouldThrow_to = tempDir <> "3"
+  cpDirError <- try $ S.cpFile cpFileShouldThrow_from cpFileShouldThrow_to
+  case cpDirError of
+    Left cpDirError' -> do
+      let
+        cpDirError'_message = Error.message cpDirError'
+        cpDirError'_code = (unsafeCoerce cpDirError' :: { code :: String }).code
+      assertEqual' "cpDirError'_message" { actual: cpDirError'_message, expected: "Recursive option not enabled, cannot copy a directory: " <> cpFileShouldThrow_from }
+      assertEqual' "cpDirError'_code" { actual: cpDirError'_code, expected: "ERR_FS_EISDIR" }
+    Right _ -> throw $ "cpFileShouldThrow: should have failed " <> show { cpFileShouldThrow_from, cpFileShouldThrow_to }

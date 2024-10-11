@@ -53,8 +53,10 @@ module Node.FS.Aff
   , fdWriteString
   , fdAppend
   , fdClose
-  , cp
-  , cp'
+  , cpFile
+  , cpFile'
+  , cpDir
+  , cpDir'
   , fchmod
   , fchown
   , fdatasync
@@ -91,7 +93,7 @@ import Node.Buffer (Buffer)
 import Node.Encoding (Encoding)
 import Node.FS.Types (BufferLength, BufferOffset, ByteCount, FileDescriptor, FileMode, FilePosition, SymlinkType)
 import Node.FS.Internal.AffUtils (toAff1, toAff2, toAff3, toAff4, toAff5)
-import Node.FS.Options (AppendFileBufferOptions, CpOptions, FdReadOptions, FdWriteOptions, GlobDirentOptions, GlobFilePathOptions, MkdirOptions, OpendirOptions, ReadFileBufferOptions, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, RealpathOptions, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileStringOptions)
+import Node.FS.Options (AppendFileBufferOptions, CpDirOptions, CpFileOptions, FdReadOptions, FdWriteOptions, GlobDirentOptions, GlobFilePathOptions, MkdirOptions, OpendirOptions, ReadFileBufferOptions, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, RealpathOptions, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileStringOptions)
 import Node.FS.Constants (AccessMode, CopyMode, FileFlags)
 import Node.FS.Async as A
 import Node.FS.Dir (Dir)
@@ -406,13 +408,23 @@ fdAppend = toAff2 A.fdAppend
 fdClose :: FileDescriptor -> Aff Unit
 fdClose = toAff1 A.fdClose
 
--- | Copy a file asynchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fspromises_copyfile_src_dest_mode)
+-- | Copy a file asynchronously using a `cp` command.
+-- | See the [Node Documentation](https://nodejs.org/api/fs.html#fscpsrc-dest-options-callback)
 -- | for details.
-cp :: FilePath -> FilePath -> Aff Unit
-cp = toAff2 A.cp
+cpFile :: FilePath -> FilePath -> Aff Unit
+cpFile = toAff2 A.cpFile
 
-cp' :: FilePath -> FilePath -> CpOptions -> Aff Unit
-cp' = toAff3 A.cp'
+cpFile' :: FilePath -> FilePath -> CpFileOptions -> Aff Unit
+cpFile' = toAff3 A.cpFile'
+
+-- | Copy a directory asynchronously using a `cp` command with option `recursive = true`.
+-- | See the [Node Documentation](https://nodejs.org/api/fs.html#fscpsrc-dest-options-callback)
+-- | for details.
+cpDir :: FilePath -> FilePath -> Aff Unit
+cpDir = toAff2 A.cpDir
+
+cpDir' :: FilePath -> FilePath -> CpDirOptions -> Aff Unit
+cpDir' = toAff3 A.cpDir'
 
 -- | Change permissions on a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fchmod_fd_mode_callback)
 -- | for details.

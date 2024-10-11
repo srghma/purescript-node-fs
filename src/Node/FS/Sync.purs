@@ -54,8 +54,10 @@ module Node.FS.Sync
   , fdWriteString
   , fdAppend
   , fdClose
-  , cp
-  , cp'
+  , cpFile
+  , cpFile'
+  , cpDir
+  , cpDir'
   , fchmod
   , fchown
   , fdatasync
@@ -96,7 +98,7 @@ import Node.FS.Constants (AccessMode, CopyMode, FileFlags, defaultAccessMode, de
 import Node.FS.Dir (Dir)
 import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
 import Node.FS.Internal.Utils (datetimeToUnixEpochTimeInSeconds)
-import Node.FS.Options (AppendFileBufferOptions, AppendFileOptionsInternal, AppendFileStringOptions, CpOptions, CpOptionsInternal, FdReadOptions, FdReadOptionsInternal, FdWriteOptions, FdWriteOptionsInternal, GlobDirentOptions, GlobFilePathOptions, GlobOptionsInternal, MkdirOptions, MkdirOptionsInternal, OpendirOptions, OpendirOptionsInternal, ReadFileBufferOptions, ReadFileOptionsInternal, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, ReaddirOptionsInternal, RealpathOptions, RealpathOptionsInternal, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileOptionsInternal, WriteFileStringOptions, appendFileBufferOptionsDefault, appendFileBufferOptionsToInternal, appendFileStringOptionsDefault, appendFileStringOptionsToInternal, cpOptionsDefault, cpOptionsToCpOptionsInternal, fdReadOptionsToInternal, fdWriteOptionsToInternal, globDirentOptionsDefault, globDirentOptionsToInternal, globFilePathOptionsDefault, globFilePathOptionsToInternal, mkdirOptionsDefault, mkdirOptionsToInternal, opendirOptionsDefault, opendirOptionsToInternal, readFileBufferOptionsDefault, readFileBufferOptionsToInternal, readFileStringOptionsDefault, readFileStringOptionsToInternal, readdirBufferOptionsDefault, readdirBufferOptionsToInternal, readdirDirentBufferOptionsDefault, readdirDirentBufferOptionsToInternal, readdirDirentOptionsDefault, readdirDirentOptionsToInternal, readdirFilePathOptionsDefault, readdirFilePathOptionsToInternal, realpathOptionsDefault, realpathOptionsToInternal, rmOptionsDefault, rmdirOptionsDefault, writeFileBufferOptionsDefault, writeFileBufferOptionsToInternal, writeFileStringOptionsDefault, writeFileStringOptionsToInternal)
+import Node.FS.Options (AppendFileBufferOptions, AppendFileOptionsInternal, AppendFileStringOptions, CpDirOptions, CpFileOptions, CpOptionsInternal, FdReadOptions, FdReadOptionsInternal, FdWriteOptions, FdWriteOptionsInternal, GlobDirentOptions, GlobFilePathOptions, GlobOptionsInternal, MkdirOptions, MkdirOptionsInternal, OpendirOptions, OpendirOptionsInternal, ReadFileBufferOptions, ReadFileOptionsInternal, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, ReaddirOptionsInternal, RealpathOptions, RealpathOptionsInternal, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileOptionsInternal, WriteFileStringOptions, appendFileBufferOptionsDefault, appendFileBufferOptionsToInternal, appendFileStringOptionsDefault, appendFileStringOptionsToInternal, cpDirOptionsDefault, cpDirOptionsToCpOptionsInternal, cpFileOptionsDefault, cpFileOptionsToCpOptionsInternal, fdReadOptionsToInternal, fdWriteOptionsToInternal, globDirentOptionsDefault, globDirentOptionsToInternal, globFilePathOptionsDefault, globFilePathOptionsToInternal, mkdirOptionsDefault, mkdirOptionsToInternal, opendirOptionsDefault, opendirOptionsToInternal, readFileBufferOptionsDefault, readFileBufferOptionsToInternal, readFileStringOptionsDefault, readFileStringOptionsToInternal, readdirBufferOptionsDefault, readdirBufferOptionsToInternal, readdirDirentBufferOptionsDefault, readdirDirentBufferOptionsToInternal, readdirDirentOptionsDefault, readdirDirentOptionsToInternal, readdirFilePathOptionsDefault, readdirFilePathOptionsToInternal, realpathOptionsDefault, realpathOptionsToInternal, rmOptionsDefault, rmdirOptionsDefault, writeFileBufferOptionsDefault, writeFileBufferOptionsToInternal, writeFileStringOptionsDefault, writeFileStringOptionsToInternal)
 import Node.FS.Perms (Perms, permsToString)
 import Node.FS.Stats (Stats)
 import Node.FS.Types (BufferLength, BufferOffset, ByteCount, FileDescriptor, FileMode, FilePosition, SymlinkType, EncodingString, symlinkTypeToNode)
@@ -537,13 +539,23 @@ fdAppend fd buff = do
 fdClose :: FileDescriptor -> Effect Unit
 fdClose fd = runEffectFn1 closeSyncImpl fd
 
--- | Copy a file synchronously. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fspromises_copyfile_src_dest_mode)
+-- | Copy a file synchronously using a `cp` command.
+-- | See the [Node Documentation](https://nodejs.org/api/fs.html#fscpsyncsrc-dest-options)
 -- | for details.
-cp :: FilePath -> FilePath -> Effect Unit
-cp src dest = cp' src dest cpOptionsDefault
+cpFile :: FilePath -> FilePath -> Effect Unit
+cpFile src dest = cpFile' src dest cpFileOptionsDefault
 
-cp' :: FilePath -> FilePath -> CpOptions -> Effect Unit
-cp' src dest opts = runEffectFn3 cpSyncImpl src dest (cpOptionsToCpOptionsInternal opts)
+cpFile' :: FilePath -> FilePath -> CpFileOptions -> Effect Unit
+cpFile' src dest opts = runEffectFn3 cpSyncImpl src dest (cpFileOptionsToCpOptionsInternal opts)
+
+-- | Copy a directory synchronously using a `cp` command with option `recursive = true`.
+-- | See the [Node Documentation](https://nodejs.org/api/fs.html#fscpsyncsrc-dest-options)
+-- | for details.
+cpDir :: FilePath -> FilePath -> Effect Unit
+cpDir src dest = cpDir' src dest cpDirOptionsDefault
+
+cpDir' :: FilePath -> FilePath -> CpDirOptions -> Effect Unit
+cpDir' src dest opts = runEffectFn3 cpSyncImpl src dest (cpDirOptionsToCpOptionsInternal opts)
 
 -- | Change permissions on a file descriptor. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_fchmod_fd_mode_callback)
 -- | for details.
