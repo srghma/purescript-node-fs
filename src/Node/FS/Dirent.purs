@@ -4,6 +4,7 @@ import Prelude
 
 import Node.Buffer (Buffer)
 import Node.Path (FilePath)
+import Partial.Unsafe (unsafeCrashWith)
 import Unsafe.Coerce (unsafeCoerce)
 
 data DirentNameType
@@ -34,6 +35,26 @@ foreign import isSocket :: forall direntnametype. Dirent direntnametype -> Boole
 -- | Check if the Dirent object describes a symbolic link.
 foreign import isSymbolicLink :: forall direntnametype. Dirent direntnametype -> Boolean
 
+data DirentType
+  = DirentType_BlockDevice
+  | DirentType_CharacterDevice
+  | DirentType_Directory
+  | DirentType_FIFO
+  | DirentType_File
+  | DirentType_Socket
+  | DirentType_SymbolicLink
+
+getType :: forall direntnametype. Dirent direntnametype -> DirentType
+getType dirent =
+  if isBlockDevice dirent then DirentType_BlockDevice
+  else if isCharacterDevice dirent then DirentType_CharacterDevice
+  else if isDirectory dirent then DirentType_Directory
+  else if isFIFO dirent then DirentType_FIFO
+  else if isFile dirent then DirentType_File
+  else if isSocket dirent then DirentType_Socket
+  else if isSymbolicLink dirent then DirentType_SymbolicLink
+  else unsafeCrashWith "Impossible: unknown Dirent type"
+
 foreign import nameImpl :: forall direntnametype nametype. Dirent direntnametype -> nametype
 
 class IsDirentNameForDirent direntnametype stringOrBuffer | direntnametype -> stringOrBuffer where
@@ -42,10 +63,10 @@ class IsDirentNameForDirent direntnametype stringOrBuffer | direntnametype -> st
 
 instance IsDirentNameForDirent DirentNameTypeString String where
   name :: Dirent DirentNameTypeString -> String
-  name = unsafeCoerce nameImpl
+  name = nameImpl
 else instance IsDirentNameForDirent DirentNameTypeBuffer Buffer where
   name :: Dirent DirentNameTypeBuffer -> Buffer
-  name = unsafeCoerce nameImpl
+  name = nameImpl
 
 -- | Get the parent directory path of the file this Dirent object refers to.
 -- | Added in: v21.4.0, v20.12.0, v18.20.0
