@@ -199,25 +199,25 @@ main = do
     Left _ -> pure unit
     Right _ -> throw $ destReadPath <> " already exists, but copying a file to there did not throw an error with COPYFILE_EXCL option"
 
-  log "copy file using cp: ok"
+  log "copy file using cpFile: ok"
   let destReadPath2 = Path.concat [ tempDir, "readable2.txt" ]
   S.cpFile readableFixturePath destReadPath2
   unlessM (S.exists destReadPath2) do
     throw $ destReadPath2 <> " does not exist after copy"
 
-  log "copy dir using cp: if copy using cpDir - ok"
+  log "copy dir using cpDir: ok"
   S.cpDir (tempDir <> "/") (tempDir <> "2")
 
-  log "copy dir using cp: if copy using cpDir - error - ERR_FS_EISDIR \"Recursive option not enabled\""
+  log "copy dir using cpFile: error - ERR_FS_EISDIR \"Recursive option not enabled\""
   let
     cpFileShouldThrow_from = tempDir <> "/"
     cpFileShouldThrow_to = tempDir <> "3"
-  cpDirError <- try $ S.cpFile cpFileShouldThrow_from cpFileShouldThrow_to
-  case cpDirError of
-    Left cpDirError' -> do
+  cpFileError <- try $ S.cpFile cpFileShouldThrow_from cpFileShouldThrow_to
+  case cpFileError of
+    Left cpFileError' -> do
       let
-        cpDirError'_message = Error.message cpDirError'
-        cpDirError'_code = (unsafeCoerce cpDirError' :: { code :: String }).code
-      assertEqual' "cpDirError'_message" { actual: cpDirError'_message, expected: "Recursive option not enabled, cannot copy a directory: " <> cpFileShouldThrow_from }
-      assertEqual' "cpDirError'_code" { actual: cpDirError'_code, expected: "ERR_FS_EISDIR" }
+        cpFileError'_message = Error.message cpFileError'
+        cpFileError'_code = (unsafeCoerce cpFileError' :: { code :: String }).code
+      assertEqual' "cpDirError'_message" { actual: cpFileError'_message, expected: "Recursive option not enabled, cannot copy a directory: " <> cpFileShouldThrow_from }
+      assertEqual' "cpDirError'_code" { actual: cpFileError'_code, expected: "ERR_FS_EISDIR" }
     Right _ -> throw $ "cpFileShouldThrow: should have failed " <> show { cpFileShouldThrow_from, cpFileShouldThrow_to }
