@@ -19,7 +19,7 @@ type JSCallback1 a = EffectFn2 (Nullable Error) a Unit
 type JSCallback2 a b = EffectFn3 (Nullable Error) a b Unit
 
 -- | Type synonym for callback functions.
-type Callback0 = Either Error Unit -> Effect Unit -- TODO: better Maybe Error -> Unit?
+type Callback0 = Either Error Unit -> Effect Unit -- TODO: maybe better Maybe Error -> Unit?
 type Callback1 a = Either Error a -> Effect Unit
 
 handleCallback0 :: Callback0 -> JSCallback0

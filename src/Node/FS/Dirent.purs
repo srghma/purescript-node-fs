@@ -1,11 +1,20 @@
-module Node.FS.Dirent where
+module Node.FS.Dirent
+  ( Dirent
+  , DirentName
+  , DirentNameString
+  , DirentNameBuffer
+  , DirentType(..)
+  , getType
+  , class IsDirentNameForDirent
+  , name
+  , parentPath
+  ) where
 
 import Prelude
 
 import Node.Buffer (Buffer)
 import Node.Path (FilePath)
 import Partial.Unsafe (unsafeCrashWith)
-import Unsafe.Coerce (unsafeCoerce)
 
 data DirentName
 
@@ -14,35 +23,22 @@ foreign import data DirentNameBuffer :: DirentName
 
 foreign import data Dirent :: DirentName -> Type
 
--- | Check if the Dirent object describes a block device.
 foreign import isBlockDevice :: forall direntnametype. Dirent direntnametype -> Boolean
-
--- | Check if the Dirent object describes a character device.
 foreign import isCharacterDevice :: forall direntnametype. Dirent direntnametype -> Boolean
-
--- | Check if the Dirent object describes a directory.
 foreign import isDirectory :: forall direntnametype. Dirent direntnametype -> Boolean
-
--- | Check if the Dirent object describes a FIFO pipe.
 foreign import isFIFO :: forall direntnametype. Dirent direntnametype -> Boolean
-
--- | Check if the Dirent object describes a regular file.
 foreign import isFile :: forall direntnametype. Dirent direntnametype -> Boolean
-
--- | Check if the Dirent object describes a socket.
 foreign import isSocket :: forall direntnametype. Dirent direntnametype -> Boolean
-
--- | Check if the Dirent object describes a symbolic link.
 foreign import isSymbolicLink :: forall direntnametype. Dirent direntnametype -> Boolean
 
 data DirentType
-  = DirentType_BlockDevice
-  | DirentType_CharacterDevice
-  | DirentType_Directory
-  | DirentType_FIFO
-  | DirentType_File
-  | DirentType_Socket
-  | DirentType_SymbolicLink
+  = DirentType_BlockDevice -- Dirent object describes a block device.
+  | DirentType_CharacterDevice -- Dirent object describes a character device.
+  | DirentType_Directory -- Dirent object describes a directory.
+  | DirentType_FIFO -- Dirent object describes a FIFO pipe.
+  | DirentType_File -- Dirent object describes a regular file.
+  | DirentType_Socket -- Dirent object describes a socket.
+  | DirentType_SymbolicLink -- Dirent object describes a symbolic link.
 
 getType :: forall direntnametype. Dirent direntnametype -> DirentType
 getType dirent =
@@ -53,7 +49,7 @@ getType dirent =
   else if isFile dirent then DirentType_File
   else if isSocket dirent then DirentType_Socket
   else if isSymbolicLink dirent then DirentType_SymbolicLink
-  else unsafeCrashWith "Impossible: unknown Dirent type"
+  else unsafeCrashWith ("Impossible: unknown Dirent type for " <> show dirent)
 
 foreign import nameImpl :: forall direntnametype nametype. Dirent direntnametype -> nametype
 
