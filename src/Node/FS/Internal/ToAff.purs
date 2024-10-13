@@ -1,4 +1,4 @@
-module Node.FS.Internal.AffUtils where
+module Node.FS.Internal.ToAff where
 
 import Prelude
 

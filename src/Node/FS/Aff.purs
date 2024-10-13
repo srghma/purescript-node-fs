@@ -92,7 +92,7 @@ import Effect.Aff (Aff, Error, makeAff, nonCanceler)
 import Node.Buffer (Buffer)
 import Node.Encoding (Encoding)
 import Node.FS.Types (BufferLength, BufferOffset, ByteCount, FileDescriptor, FileMode, FilePosition, SymlinkType)
-import Node.FS.Internal.AffUtils (toAff1, toAff2, toAff3, toAff4, toAff5)
+import Node.FS.Internal.ToAff (toAff1, toAff2, toAff3, toAff4, toAff5)
 import Node.FS.Options (AppendFileBufferOptions, CpDirOptions, CpFileOptions, FdReadOptions, FdWriteOptions, GlobDirentOptions, GlobFilePathOptions, MkdirOptions, OpendirOptions, ReadFileBufferOptions, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, RealpathOptions, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileStringOptions)
 import Node.FS.Constants (AccessMode, CopyMode, FileFlags)
 import Node.FS.Async as A

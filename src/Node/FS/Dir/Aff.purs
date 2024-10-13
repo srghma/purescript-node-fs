@@ -14,7 +14,7 @@ import Effect.Ref as Ref
 import Node.FS.Dir (Dir)
 import Node.FS.Dir.Async as A
 import Node.FS.Dirent (Dirent, DirentNameString)
-import Node.FS.Internal.AffUtils (toAff1)
+import Node.FS.Internal.ToAff (toAff1)
 
 read :: Dir -> Aff (Maybe (Dirent DirentNameString))
 read = toAff1 A.read
