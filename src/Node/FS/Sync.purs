@@ -96,7 +96,7 @@ import Node.Buffer (Buffer, size)
 import Node.Encoding (Encoding(..), encodingToNode)
 import Node.FS.Constants (AccessMode, CopyMode, FileFlags, defaultAccessMode, defaultCopyMode, fileFlagsToNode)
 import Node.FS.Dir (Dir)
-import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
+import Node.FS.Dirent (Dirent, DirentNameBuffer, DirentNameString)
 import Node.FS.Internal.Utils (datetimeToUnixEpochTimeInSeconds)
 import Node.FS.Options (AppendFileBufferOptions, AppendFileOptionsInternal, AppendFileStringOptions, CpDirOptions, CpFileOptions, CpOptionsInternal, FdReadOptions, FdReadOptionsInternal, FdWriteOptions, FdWriteOptionsInternal, GlobDirentOptions, GlobFilePathOptions, GlobOptionsInternal, MkdirOptions, MkdirOptionsInternal, OpendirOptions, OpendirOptionsInternal, ReadFileBufferOptions, ReadFileOptionsInternal, ReadFileStringOptions, ReaddirBufferOptions, ReaddirDirentBufferOptions, ReaddirDirentOptions, ReaddirFilePathOptions, ReaddirOptionsInternal, RealpathOptions, RealpathOptionsInternal, RmOptions, RmdirOptions, WriteFileBufferOptions, WriteFileOptionsInternal, WriteFileStringOptions, appendFileBufferOptionsDefault, appendFileBufferOptionsToInternal, appendFileStringOptionsDefault, appendFileStringOptionsToInternal, cpDirOptionsDefault, cpDirOptionsToCpOptionsInternal, cpFileOptionsDefault, cpFileOptionsToCpOptionsInternal, fdReadOptionsToInternal, fdWriteOptionsToInternal, globDirentOptionsDefault, globDirentOptionsToInternal, globFilePathOptionsDefault, globFilePathOptionsToInternal, mkdirOptionsDefault, mkdirOptionsToInternal, opendirOptionsDefault, opendirOptionsToInternal, readFileBufferOptionsDefault, readFileBufferOptionsToInternal, readFileStringOptionsDefault, readFileStringOptionsToInternal, readdirBufferOptionsDefault, readdirBufferOptionsToInternal, readdirDirentBufferOptionsDefault, readdirDirentBufferOptionsToInternal, readdirDirentOptionsDefault, readdirDirentOptionsToInternal, readdirFilePathOptionsDefault, readdirFilePathOptionsToInternal, realpathOptionsDefault, realpathOptionsToInternal, rmOptionsDefault, rmdirOptionsDefault, writeFileBufferOptionsDefault, writeFileBufferOptionsToInternal, writeFileStringOptionsDefault, writeFileStringOptionsToInternal)
 import Node.FS.Perms (Perms, permsToString)
@@ -337,27 +337,27 @@ readdirBuffer' file options = runEffectFn2 readdirSyncImpl file (readdirBufferOp
 -- | Reads the contents of a directory.
 readdirDirent
   :: FilePath
-  -> Effect (Array (Dirent DirentNameTypeString))
+  -> Effect (Array (Dirent DirentNameString))
 readdirDirent file = readdirDirent' file readdirDirentOptionsDefault
 
 -- | Reads the contents of a directory.
 readdirDirent'
   :: FilePath
   -> ReaddirDirentOptions
-  -> Effect (Array (Dirent DirentNameTypeString))
+  -> Effect (Array (Dirent DirentNameString))
 readdirDirent' file options = runEffectFn2 readdirSyncImpl file (readdirDirentOptionsToInternal options)
 
 -- | Reads the contents of a directory.
 readdirDirentBuffer
   :: FilePath
-  -> Effect (Array (Dirent DirentNameTypeBuffer))
+  -> Effect (Array (Dirent DirentNameBuffer))
 readdirDirentBuffer file = readdirDirentBuffer' file readdirDirentBufferOptionsDefault
 
 -- | Reads the contents of a directory.
 readdirDirentBuffer'
   :: FilePath
   -> ReaddirDirentBufferOptions
-  -> Effect (Array (Dirent DirentNameTypeBuffer))
+  -> Effect (Array (Dirent DirentNameBuffer))
 readdirDirentBuffer' file options = runEffectFn2 readdirSyncImpl file (readdirDirentBufferOptionsToInternal options)
 
 -- | Sets the accessed and modified times for the specified file.
@@ -600,10 +600,10 @@ glob pattern = glob' pattern globFilePathOptionsDefault
 glob' :: Array FilePath -> GlobFilePathOptions -> Effect (Array FilePath)
 glob' pattern options = runEffectFn2 globSyncImpl pattern (globFilePathOptionsToInternal options)
 
-globDirent :: Array FilePath -> Effect (Array (Dirent DirentNameTypeString))
+globDirent :: Array FilePath -> Effect (Array (Dirent DirentNameString))
 globDirent pattern = globDirent' pattern globDirentOptionsDefault
 
-globDirent' :: Array FilePath -> GlobDirentOptions -> Effect (Array (Dirent DirentNameTypeString))
+globDirent' :: Array FilePath -> GlobDirentOptions -> Effect (Array (Dirent DirentNameString))
 globDirent' pattern options = runEffectFn2 globSyncImpl pattern (globDirentOptionsToInternal options)
 
 -- | Change permissions on a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lchmod_path_mode_callback)

@@ -14,7 +14,7 @@ import Node.Encoding (Encoding(..))
 import Node.FS.Options (opendirOptionsDefault, rmOptionsDefault)
 import Node.FS.Aff as A
 import Node.FS.Aff.Dir (close, entries, read)
-import Node.FS.Dirent (Dirent, DirentNameTypeString)
+import Node.FS.Dirent (Dirent, DirentNameString)
 import Node.FS.Perms (permsAll)
 import Node.Path (FilePath)
 import Node.Path as Path
@@ -74,7 +74,7 @@ test1 = do
 }]"""
     }
   liftEffect $ log $ show files'
-  try (entries dir) >>= \(eitherFile :: Either Error (Array (Dirent DirentNameTypeString))) -> liftEffect $ assertEqual
+  try (entries dir) >>= \(eitherFile :: Either Error (Array (Dirent DirentNameString))) -> liftEffect $ assertEqual
     { actual: String.take 74 $ show eitherFile
     , expected: "(Left Error [ERR_DIR_CLOSED]: Directory handle was closed\n    at #readImpl"
     }
@@ -106,7 +106,7 @@ test2 = do
     { actual: String.take 74 $ show error
     , expected: "(Left Error [ERR_DIR_CLOSED]: Directory handle was closed\n    at Dir.close"
     }
-  try (read dir) >>= \(eitherFile :: Either Error (Maybe (Dirent DirentNameTypeString))) -> liftEffect $ assertEqual
+  try (read dir) >>= \(eitherFile :: Either Error (Maybe (Dirent DirentNameString))) -> liftEffect $ assertEqual
     { actual: String.take 74 $ show eitherFile
     , expected: "(Left Error [ERR_DIR_CLOSED]: Directory handle was closed\n    at #readImpl"
     }

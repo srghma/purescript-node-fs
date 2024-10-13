@@ -97,7 +97,7 @@ import Node.FS.Options (AppendFileBufferOptions, CpDirOptions, CpFileOptions, Fd
 import Node.FS.Constants (AccessMode, CopyMode, FileFlags)
 import Node.FS.Async as A
 import Node.FS.Dir (Dir)
-import Node.FS.Dirent (Dirent, DirentNameTypeBuffer, DirentNameTypeString)
+import Node.FS.Dirent (Dirent, DirentNameBuffer, DirentNameString)
 import Node.FS.Perms (Perms)
 import Node.FS.Stats (Stats)
 import Node.Path (FilePath)
@@ -258,25 +258,25 @@ readdirBuffer = toAff1 A.readdirBuffer
 readdirBuffer' :: FilePath -> ReaddirBufferOptions -> Aff (Array Buffer)
 readdirBuffer' = toAff2 A.readdirBuffer'
 
--- | Reads the contents of a directory and returns an Aff (Array (Dirent DirentNameTypeString)).
-readdirDirent :: FilePath -> Aff (Array (Dirent DirentNameTypeString))
+-- | Reads the contents of a directory and returns an Aff (Array (Dirent DirentNameString)).
+readdirDirent :: FilePath -> Aff (Array (Dirent DirentNameString))
 readdirDirent = toAff1 A.readdirDirent
 
--- | Reads the contents of a directory with options and returns Aff (Array (Dirent DirentNameTypeString)).
-readdirDirent' :: FilePath -> ReaddirDirentOptions -> Aff (Array (Dirent DirentNameTypeString))
+-- | Reads the contents of a directory with options and returns Aff (Array (Dirent DirentNameString)).
+readdirDirent' :: FilePath -> ReaddirDirentOptions -> Aff (Array (Dirent DirentNameString))
 readdirDirent' = toAff2 A.readdirDirent'
 
 -- | Reads the contents of a directory.
 readdirDirentBuffer
   :: FilePath
-  -> Aff (Array (Dirent DirentNameTypeBuffer))
+  -> Aff (Array (Dirent DirentNameBuffer))
 readdirDirentBuffer = toAff1 A.readdirDirentBuffer
 
 -- | Reads the contents of a directory.
 readdirDirentBuffer'
   :: FilePath
   -> ReaddirDirentBufferOptions
-  -> Aff (Array (Dirent DirentNameTypeBuffer))
+  -> Aff (Array (Dirent DirentNameBuffer))
 readdirDirentBuffer' = toAff2 A.readdirDirentBuffer'
 
 -- |
@@ -469,10 +469,10 @@ glob = toAff1 A.glob
 glob' :: Array FilePath -> GlobFilePathOptions -> Aff (Array FilePath)
 glob' = toAff2 A.glob'
 
-globDirent :: Array FilePath -> Aff (Array (Dirent DirentNameTypeString))
+globDirent :: Array FilePath -> Aff (Array (Dirent DirentNameString))
 globDirent = toAff1 A.globDirent
 
-globDirent' :: Array FilePath -> GlobDirentOptions -> Aff (Array (Dirent DirentNameTypeString))
+globDirent' :: Array FilePath -> GlobDirentOptions -> Aff (Array (Dirent DirentNameString))
 globDirent' = toAff2 A.globDirent'
 
 -- | Change permissions on a symbolic link. See the [Node Documentation](https://nodejs.org/api/fs.html#fs_fs_lchmod_path_mode_callback)

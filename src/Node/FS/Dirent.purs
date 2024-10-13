@@ -7,12 +7,12 @@ import Node.Path (FilePath)
 import Partial.Unsafe (unsafeCrashWith)
 import Unsafe.Coerce (unsafeCoerce)
 
-data DirentNameType
+data DirentName
 
-foreign import data DirentNameTypeString :: DirentNameType
-foreign import data DirentNameTypeBuffer :: DirentNameType
+foreign import data DirentNameString :: DirentName
+foreign import data DirentNameBuffer :: DirentName
 
-foreign import data Dirent :: DirentNameType -> Type
+foreign import data Dirent :: DirentName -> Type
 
 -- | Check if the Dirent object describes a block device.
 foreign import isBlockDevice :: forall direntnametype. Dirent direntnametype -> Boolean
@@ -61,11 +61,11 @@ class IsDirentNameForDirent direntnametype stringOrBuffer | direntnametype -> st
   -- | The file name that this <fs.Dirent> object refers to. The type of this value is determined by the options.encoding passed to fs.readdir() or fs.readdirSync().
   name :: Dirent direntnametype -> stringOrBuffer
 
-instance IsDirentNameForDirent DirentNameTypeString String where
-  name :: Dirent DirentNameTypeString -> String
+instance IsDirentNameForDirent DirentNameString String where
+  name :: Dirent DirentNameString -> String
   name = nameImpl
-else instance IsDirentNameForDirent DirentNameTypeBuffer Buffer where
-  name :: Dirent DirentNameTypeBuffer -> Buffer
+else instance IsDirentNameForDirent DirentNameBuffer Buffer where
+  name :: Dirent DirentNameBuffer -> Buffer
   name = nameImpl
 
 -- | Get the parent directory path of the file this Dirent object refers to.

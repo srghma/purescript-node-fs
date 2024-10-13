@@ -11,7 +11,7 @@ import Foreign as Foreign
 import Node.Buffer (Buffer)
 import Node.Encoding (Encoding(..), encodingToNode)
 import Node.FS.Constants (CopyMode, FileFlags(..), copyFile_NO_FLAGS, fileFlagsToNode)
-import Node.FS.Dirent (Dirent, DirentNameTypeString)
+import Node.FS.Dirent (Dirent, DirentNameString)
 import Node.FS.Internal.Undefinable (Undefinable)
 import Node.FS.Internal.Undefinable as Undefinable
 import Node.FS.Perms (Perms, all, mkPerms, permsToString, read, write)
@@ -342,12 +342,12 @@ globFilePathOptionsDefault = { cwd: Nothing, exclude: Nothing }
 globFilePathOptionsToInternal :: GlobFilePathOptions -> GlobOptionsInternal FilePath
 globFilePathOptionsToInternal { cwd, exclude } = { cwd: toNullable cwd, exclude: toNullable exclude, withFileTypes: false }
 
-type GlobDirentOptions = { cwd :: Maybe FilePath, exclude :: Maybe (Dirent DirentNameTypeString -> Boolean) }
+type GlobDirentOptions = { cwd :: Maybe FilePath, exclude :: Maybe (Dirent DirentNameString -> Boolean) }
 
 globDirentOptionsDefault :: GlobDirentOptions
 globDirentOptionsDefault = { cwd: Nothing, exclude: Nothing }
 
-globDirentOptionsToInternal :: GlobDirentOptions -> GlobOptionsInternal (Dirent DirentNameTypeString)
+globDirentOptionsToInternal :: GlobDirentOptions -> GlobOptionsInternal (Dirent DirentNameString)
 globDirentOptionsToInternal { cwd, exclude } = { cwd: toNullable cwd, exclude: toNullable exclude, withFileTypes: true }
 
 ------------------

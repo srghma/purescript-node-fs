@@ -18,10 +18,10 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Node.FS.Dir (Dir)
 import Node.FS.Dir as Dir
-import Node.FS.Dirent (Dirent, DirentNameTypeString)
+import Node.FS.Dirent (Dirent, DirentNameString)
 import Node.FS.Internal.AffUtils (toAff1)
 
-read :: Dir -> Aff (Maybe (Dirent DirentNameTypeString))
+read :: Dir -> Aff (Maybe (Dirent DirentNameString))
 read = toAff1 Dir.read
 
 close :: Dir -> Aff Unit
@@ -29,11 +29,11 @@ close dir = makeAff \k -> do
   Dir.close dir k
   pure nonCanceler
 
-entries :: Dir -> Aff (Array (Dirent DirentNameTypeString))
+entries :: Dir -> Aff (Array (Dirent DirentNameString))
 entries dir = do
   direntArrayRef <- liftEffect $ Ref.new []
   let
-    handleDirent :: Dirent DirentNameTypeString -> Effect Unit
+    handleDirent :: Dirent DirentNameString -> Effect Unit
     handleDirent dirent = Ref.modify_ (flip Array.snoc dirent) direntArrayRef
   entriesIterate dir handleDirent
   liftEffect $ Ref.read direntArrayRef
@@ -47,7 +47,7 @@ entries dir = do
 -- |
 -- | Possible errors:
 -- | - if dir is closed already - `read` and `close` will throw "Directory handle was closed"
-entriesIterate :: Dir -> ((Dirent DirentNameTypeString) -> Effect Unit) -> Aff Unit
+entriesIterate :: Dir -> ((Dirent DirentNameString) -> Effect Unit) -> Aff Unit
 entriesIterate dir handleDirent = finally (close dir) $ makeAff \(k :: Either Error Unit -> Effect Unit) -> do
   stopRef <- Ref.new false
   go k stopRef
