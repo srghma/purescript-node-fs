@@ -15,6 +15,8 @@ import Prelude
 import Node.Buffer (Buffer)
 import Node.Path (FilePath)
 import Partial.Unsafe (unsafeCrashWith)
+import Data.Generic.Rep (class Generic)
+import Data.Show.Generic (genericShow)
 
 data DirentName
 
@@ -39,6 +41,12 @@ data DirentType
   | DirentType_File -- Dirent object describes a regular file.
   | DirentType_Socket -- Dirent object describes a socket.
   | DirentType_SymbolicLink -- Dirent object describes a symbolic link.
+
+derive instance Eq DirentType
+derive instance Ord DirentType
+derive instance Generic DirentType _
+instance Show DirentType where
+  show = genericShow
 
 getType :: forall direntnametype. Dirent direntnametype -> DirentType
 getType dirent =
