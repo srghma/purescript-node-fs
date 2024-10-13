@@ -1,9 +1,4 @@
-module Node.FS.Aff.Dir
-  ( read
-  , close
-  , entries
-  , entriesIterate
-  ) where
+module Node.FS.Dir.Aff where
 
 import Prelude
 
@@ -17,16 +12,16 @@ import Effect.Exception (Error)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Node.FS.Dir (Dir)
-import Node.FS.Dir as Dir
+import Node.FS.Dir.Async as A
 import Node.FS.Dirent (Dirent, DirentNameString)
 import Node.FS.Internal.AffUtils (toAff1)
 
 read :: Dir -> Aff (Maybe (Dirent DirentNameString))
-read = toAff1 Dir.read
+read = toAff1 A.read
 
 close :: Dir -> Aff Unit
 close dir = makeAff \k -> do
-  Dir.close dir k
+  A.close dir k
   pure nonCanceler
 
 entries :: Dir -> Aff (Array (Dirent DirentNameString))
@@ -58,7 +53,7 @@ entriesIterate dir handleDirent = finally (close dir) $ makeAff \(k :: Either Er
     stopped <- Ref.read stopRef
     if stopped then do
       callback $ Right unit
-    else Dir.read dir case _ of
+    else A.read dir case _ of
       Left error -> callback $ Left error
       Right maybeDirent ->
         case maybeDirent of

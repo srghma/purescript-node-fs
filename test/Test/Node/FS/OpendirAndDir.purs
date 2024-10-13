@@ -13,7 +13,7 @@ import Effect.Exception (Error)
 import Node.Encoding (Encoding(..))
 import Node.FS.Options (opendirOptionsDefault, rmOptionsDefault)
 import Node.FS.Aff as A
-import Node.FS.Aff.Dir (close, entries, read)
+import Node.FS.Dir.Aff (close, entries, read)
 import Node.FS.Dirent (Dirent, DirentNameString)
 import Node.FS.Perms (permsAll)
 import Node.Path (FilePath)
@@ -22,8 +22,6 @@ import Test.Assert (assertEqual)
 
 outerTmpDir :: FilePath
 outerTmpDir = Path.concat [ "tmp", "dir-entries-test" ]
-
--- outerTmpDir = Path.concat [".", "tmp", "dir-entries-test"]
 
 prepare :: Aff Unit
 prepare = do
