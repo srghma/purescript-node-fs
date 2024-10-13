@@ -7,7 +7,7 @@ import Data.Nullable (Nullable, toMaybe)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, runEffectFn2)
 import Node.FS.Dirent (Dirent, DirentNameString)
-import Node.FS.Internal.Utils (Callback0, JSCallback0, JSCallback1, Callback1, handleCallback0, handleCallback1)
+import Node.FS.Internal.Callbacks (Callback0, JSCallback0, JSCallback1, Callback1, handleCallback0, handleCallback1)
 import Node.Path (FilePath)
 
 -- Foreign imports for the Dir class

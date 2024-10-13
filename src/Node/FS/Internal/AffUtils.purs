@@ -4,7 +4,7 @@ import Prelude
 
 import Effect (Effect)
 import Effect.Aff (Aff, makeAff, nonCanceler)
-import Node.FS.Internal.Utils (Callback1)
+import Node.FS.Internal.Callbacks (Callback1)
 
 toAff
   :: forall a
