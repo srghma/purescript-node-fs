@@ -1,4 +1,4 @@
-module Node.FS.Dir.Sync where
+module Node.FS.Dir.Sync (close, read) where
 
 import Prelude
 

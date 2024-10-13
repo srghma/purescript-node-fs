@@ -1,4 +1,4 @@
-module Node.FS.Dir.Async where
+module Node.FS.Dir.Async (close, read) where
 
 import Prelude
 
